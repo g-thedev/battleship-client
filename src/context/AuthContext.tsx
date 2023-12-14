@@ -26,10 +26,6 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         setLoading(false);
     }, []);
 
-    useEffect(() => {
-        console.log('Authentication status changed:', isAuthenticated);
-    }, [isAuthenticated]);
-
     if (loading) {
         return <div>Loading...</div>; // Or some loading indicator
     }

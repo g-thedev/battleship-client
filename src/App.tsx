@@ -9,7 +9,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
   const auth = useAuth();
-  console.log('PrivateRoute', auth.isAuthenticated);
   return auth.isAuthenticated ? element : <Navigate to="/login" />;
 };
 
