@@ -1,29 +1,32 @@
-import { useState, useEffect } from 'react'
-import './App.css'
-import Grid from './components/Grid/Grid';
 
-function App() {
-  const [data, setData] = useState(null);
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import NavBar from './components/common/Nav';
+import RegisterPage from './pages/Register';
+import LoginPage from './pages/Login';
+import Homepage from './pages/Homepage';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
-  useEffect(() => {
-    fetch('/api/data')
-        .then(response => response.json())
-        .then(data => setData(data))
-        .catch(error => console.error('Error fetching data:', error));
-}, []); // Empty dependency array means this effect runs once on mount
+const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
+  const auth = useAuth();
+  console.log('PrivateRoute', auth.isAuthenticated);
+  return auth.isAuthenticated ? element : <Navigate to="/login" />;
+};
 
-
+const App: React.FC = () => {
   return (
-    <>
-      <h1>BATTLESHIP</h1>
-      <Grid />
+      <AuthProvider>
+          <Router>
+              <NavBar />
+              <Routes>
+                  <Route path="/" element={<PrivateRoute element={<Homepage />} />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  {/* Add other routes here */}
+              </Routes>
+          </Router>
+      </AuthProvider>
+  );
+};
 
-      <h1>API Data</h1>
-      <div>
-          {data ? <div>{JSON.stringify(data)}</div> : <div>Loading...</div>}
-      </div>
-    </>
-  )
-}
-
-export default App
+export default App;
