@@ -21,8 +21,8 @@ const LoginPage: React.FC = () => {
         e.preventDefault();
         try {
             const response = await loginUser(formData);
-            if (response.token) {
-                auth.login(response.token);
+            if (response.token && response.user_id) {
+                auth.login(response.token, response.user_id);
                 navigate('/');
             }
 

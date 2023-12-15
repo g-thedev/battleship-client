@@ -16,8 +16,7 @@ const NavBar: React.FC = () => {
             <div className="nav">
                 {isAuthenticated ? (
                     <>
-                        
-                        <button onClick={() => navigate('/profile')}>Profile</button>
+                        {location.pathname !== '/profile' && location.pathname !== '/lobby' && <button onClick={() => navigate('/profile')}>Profile</button>}
                         {location.pathname !== '/' && <button onClick={() => navigate('/')}>Main Menu</button>}
                         <button onClick={logout}>Logout</button>
                     </>

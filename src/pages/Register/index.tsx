@@ -22,8 +22,8 @@ const RegisterPage: React.FC = () => {
         e.preventDefault();
         try {
             const response = await registerUser(formData);
-            if (response) {
-                auth.login(response);
+            if (response.token && response.refreshToken) {
+                auth.login(response.token, response.user_id);
                 navigate('/');
             }
             

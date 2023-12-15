@@ -2,7 +2,7 @@ import React, { createContext, useEffect, useState, useContext, ReactNode } from
 
 interface IAuthContextType {
     isAuthenticated: boolean;
-    login: (token: { accessToken: string, refreshToken: string }) => void; 
+    login: (token: { accessToken: string, refreshToken: string }, user_id: string) => void; 
     logout: () => void; 
 }
 
@@ -31,9 +31,10 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
     
 
-    const login = (token: { accessToken: string, refreshToken: string }) => {
+    const login = (token: { accessToken: string, refreshToken: string }, user_id: string) => {
         localStorage.setItem('accessToken', token.accessToken);
         localStorage.setItem('refreshToken', token.refreshToken);
+        localStorage.setItem('user_id', user_id);
         setIsAuthenticated(true);
     };
 
