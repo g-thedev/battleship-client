@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../../services/api';
+import './style.css';
 
 const RegisterPage: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -33,8 +34,8 @@ const RegisterPage: React.FC = () => {
     };
 
     return (
-        <div>
-            <h1>Login</h1>
+        <div className='registration-form'>
+            <h1>Register</h1>
             <input
                 type="text"
                 placeholder="Username"

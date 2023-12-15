@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import './NavBar.css';
+import './style.css';
 import { AuthContext } from '../../../context/AuthContext';
 
 const NavBar: React.FC = () => {

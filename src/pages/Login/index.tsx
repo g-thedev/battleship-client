@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../../services/api';
+import './style.css';
 
 const LoginPage: React.FC = () => {
     const [formData, setFormData] = useState({
@@ -32,7 +33,7 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div>
+        <div className='login-form'>
             <h1>Login</h1>
             <input
                 type="text"
