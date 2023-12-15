@@ -6,6 +6,7 @@ const ENDPOINT = 'http://localhost:3000';
 
 const Lobby = () => {
     const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
+    const [selectedUser, setSelectedUser] = useState<string>('');
 
     const currentUserId = localStorage.getItem('user_id');
 
@@ -36,14 +37,40 @@ const Lobby = () => {
         }
     }, []);
 
+    const handleUserSelection = (userId: string) => {
+        setSelectedUser(userId);
+    };
+
+    const handleChallenge = () => {
+        if (selectedUser) {
+            console.log(`Challenge request send to ${lobbyUsers[selectedUser].username}`);
+        }
+    };
+
     return (
         <div className='lobby'>
             <h1>Lobby</h1>
             <ul>
                 {Object.values(lobbyUsers).filter(user => user.id !== currentUserId).map((user) => (
-                    <li key={user.id}>{user.username}</li>
+                    <li key={user.id}>
+                        <input
+                            type='radio'
+                            id={user.id}
+                            name='userSelection'
+                            value={user.id}
+                            checked={selectedUser === user.id}
+                            onChange={() => handleUserSelection(user.id)}
+                        />
+                        <label htmlFor={user.id}>{user.username}</label>
+                    </li>
                 ))}
             </ul>
+            {selectedUser && (
+                <div>
+                    <p>Challenge {lobbyUsers[selectedUser].username}?</p>
+                    <button onClick={handleChallenge}>Confirm</button>
+                </div>
+            )}
         </div>
     );
 };
