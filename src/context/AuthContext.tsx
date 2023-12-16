@@ -32,7 +32,9 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     
 
     const login = (token: { accessToken: string, refreshToken: string }, user_id: string) => {
+        // change to sessionStorage?
         localStorage.setItem('accessToken', token.accessToken);
+        // Okay to keep in localStorage
         localStorage.setItem('refreshToken', token.refreshToken);
         localStorage.setItem('user_id', user_id);
         setIsAuthenticated(true);
@@ -41,6 +43,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     const logout = () => {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user_id');
         setIsAuthenticated(false);
     };
 
