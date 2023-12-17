@@ -28,3 +28,17 @@ export const loginUser = async (userData: IUser) => {
     });
     return response.json();
 };
+
+export const callRefreshToken = async () => {
+    const refresh = localStorage.getItem('refreshToken');
+    // Call API to refresh token
+    const response = await fetch('/api/users/refresh', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'x-refresh-token': JSON.stringify({refresh}),
+        }
+    });
+    return response.json();
+};
+
