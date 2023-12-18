@@ -5,13 +5,16 @@ import './style.css';
 const ENDPOINT = 'http://localhost:3000';
 
 const Lobby = () => {
-    const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
-    const [challengedUserId, setChallengedUserId] = useState<string>('');
     const [socket, setSocket] = useState<Socket | null>(null);
+    const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
+
+    const currentUserId = localStorage.getItem('user_id');
+
+    const [opponentId, setOpponentId] = useState<string>('');
+    
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
-
-    const challengerUserId = localStorage.getItem('user_id');
+    
 
     useEffect(() => {
         // Retrieve the token from local storage
@@ -25,11 +28,11 @@ const Lobby = () => {
                 },
             });
 
-            newSocket.on('lobbyUpdate', (users) => {
+            newSocket.on('update_lobby', (users) => {
                 setLobbyUsers(users);
             });
 
-            newSocket.on('challenge-received', (data) => {
+            newSocket.on('challenge_received', (data) => {
                 console.log('Challenge received:', data);
             });
 
@@ -51,8 +54,8 @@ const Lobby = () => {
     //       after being disconnected due to reloading the page or closing the tab
 
     useEffect(() => {
-        if (challengedUserId && !lobbyUsers[challengedUserId]) {
-            setChallengedUserId('');
+        if (opponentId && !lobbyUsers[opponentId]) {
+            setOpponentId('');
             setTimeout(() => {
                 if (!userReturned) {
                     setShowDisconnectedMessage(true);
@@ -64,17 +67,17 @@ const Lobby = () => {
 
             }, 10000);
         }
-    }, [challengedUserId, lobbyUsers, userReturned]);
+    }, [opponentId, lobbyUsers, userReturned]);
 
     const handleUserSelection = (userId: string) => {
-        setChallengedUserId(userId);
+        setOpponentId(userId);
         setUserReturned(false);
     };
 
     const handleChallenge = () => {
-        if (challengedUserId && socket) {
-            socket.emit('challenge-request', { challengedUserId, challengerUserId });
-            console.log(`Challenge request sent to ${lobbyUsers[challengedUserId].username}`);
+        if (opponentId && socket) {
+            socket.emit('request_challenge', { challengedUserId: opponentId, challengerUserId: currentUserId });
+            console.log(`Challenge request sent to ${lobbyUsers[opponentId].username}`);
         }
     };
 
@@ -82,14 +85,14 @@ const Lobby = () => {
         <div className='lobby'>
             <h1>Lobby</h1>
             <ul>
-                {Object.values(lobbyUsers).filter(user => user.id !== challengerUserId).map((user) => (
+                {Object.values(lobbyUsers).filter(user => user.id !== currentUserId).map((user) => (
                     <li key={user.id}>
                         <input
                             type='radio'
                             id={user.id}
                             name='userSelection'
                             value={user.id}
-                            checked={challengedUserId === user.id}
+                            checked={opponentId === user.id}
                             onChange={() => handleUserSelection(user.id)}
                         />
                         <label htmlFor={user.id}>{user.username}</label>
@@ -99,9 +102,9 @@ const Lobby = () => {
             {showDisconnectedMessage && (
                 <p>Selected user has been disconnected!</p>
             )}
-            {challengedUserId && lobbyUsers[challengedUserId] && (
+            {opponentId && lobbyUsers[opponentId] && (
                 <div>
-                    <p>Challenge {lobbyUsers[challengedUserId].username}?</p>
+                    <p>Challenge {lobbyUsers[opponentId].username}?</p>
                     <button onClick={handleChallenge}>Confirm</button>
                 </div>
             )}
