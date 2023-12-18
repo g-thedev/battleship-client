@@ -11,6 +11,7 @@ const Lobby = () => {
     const currentUserId = localStorage.getItem('user_id');
 
     const [opponentId, setOpponentId] = useState<string>('');
+    const [challenger, setChallenger] = useState<{ challengerUserId: string, challengedUserId: string }>({ challengerUserId: '', challengedUserId: '' });
     
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
@@ -33,6 +34,7 @@ const Lobby = () => {
             });
 
             newSocket.on('challenge_received', (data) => {
+                setChallenger(data);
                 console.log('Challenge received:', data);
             });
 
@@ -80,6 +82,13 @@ const Lobby = () => {
             console.log(`Challenge request sent to ${lobbyUsers[opponentId].username}`);
         }
     };
+
+    const handleAcceptChallenge = () => {
+        if (challenger && socket) {
+            socket.emit('accept_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
+            console.log('Challenge accepted');
+        }
+    }
 
     return (
         <div className='lobby'>
