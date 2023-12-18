@@ -1,3 +1,7 @@
 .lobby {
     color: white;
 }
+
+.lobby ul li {
+    list-style-type: none;
+}
