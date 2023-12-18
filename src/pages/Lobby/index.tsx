@@ -11,7 +11,7 @@ const Lobby = () => {
     const currentUserId = localStorage.getItem('user_id');
 
     const [opponentId, setOpponentId] = useState<string>('');
-    const [challenger, setChallenger] = useState<{ challengerUserId: string, challengedUserId: string }>({ challengerUserId: '', challengedUserId: '' });
+    const [challenger, setChallenger] = useState<{ challengerUserId: string, challengerUsername: string }>({ challengerUserId: '', challengerUsername: '' });
     
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
@@ -36,6 +36,10 @@ const Lobby = () => {
             newSocket.on('challenge_received', (data) => {
                 setChallenger(data);
                 console.log('Challenge received:', data);
+            });
+
+            newSocket.on('challenge_accepted', (data) => {
+                console.log('Challenge accepted:', data);
             });
 
             newSocket.on('connect_error', (error) => {
@@ -110,6 +114,12 @@ const Lobby = () => {
             </ul>
             {showDisconnectedMessage && (
                 <p>Selected user has been disconnected!</p>
+            )}
+            {challenger && challenger.challengerUserId && (
+                <div>
+                    <p>{challenger.challengerUsername} has challenged you!</p>
+                    <button onClick={handleAcceptChallenge}>Accept</button>
+                </div>
             )}
             {opponentId && lobbyUsers[opponentId] && (
                 <div>
