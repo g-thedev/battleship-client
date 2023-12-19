@@ -6,6 +6,16 @@ import Button from '../../components/button';
 // import './style.css';
 
 const GameSetup = () => {
+    const location = useLocation();
+
+    // Function to parse query parameters
+    const getQueryParam = (param: string) => {
+        const queryParams = new URLSearchParams(location.search);
+        return queryParams.get(param);
+    };
+
+    const roomId = getQueryParam('roomId');
+
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
         battleship: 4,
