@@ -54,11 +54,35 @@ const GameSetup = () => {
                 onShipPlacement={handleShipPlacement}
             />
             <div>
-                {Object.keys(shipTypes).map((shipType) => (
-                    <Button key={shipType} text={`Set ${shipType}`} onClick={() => handleShipSelection(shipType)} />
-                ))}
-                <Button text="Reset Ships" onClick={resetShips} />
+                <div>
+                    {Object.keys(shipTypes).map((shipType) => {
+                        const isPlaced = ships[shipType as keyof typeof ships].length > 0;
+                        const buttonText = isPlaced ? `Reset ${shipType}` : `Set ${shipType}`;
+                        const handleClick = () => {
+                            if (isPlaced) {
+                                // Reset only this specific ship
+                                setShips(prevShips => ({
+                                    ...prevShips,
+                                    [shipType]: []
+                                }));
+                            } else {
+                                // Handle ship selection
+                                handleShipSelection(shipType);
+                            }
+                        };
+
+                        return (
+                            <Button key={shipType} text={buttonText} onClick={handleClick} />
+                        );
+                    })}
+                </div>
+                <Button text="Reset All Ships" onClick={resetShips} />
+
+                {Object.values(ships).every(ship => ship.length > 0) && (
+                    <Button text="Ready" onClick={() => console.log('Ready')} />
+                )}
             </div>
+
         </div>
     );
 }
