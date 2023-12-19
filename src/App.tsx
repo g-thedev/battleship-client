@@ -28,6 +28,7 @@ const App: React.FC = () => {
                   <Route path="/lobby" element={<PrivateRoute element={<LobbyPage />} />} />
                   <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
                   <Route path="/game-setup" element={<PrivateRoute element={<GameSetup />} />} />
+                  <Route path="/game-room" element={<PrivateRoute element={<GameRoom />} />} />
                   {/* Add other routes here */}
               </Routes>
           </Router>
