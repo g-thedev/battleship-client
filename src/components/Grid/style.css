@@ -10,7 +10,7 @@
   }
   
   .header-cell, .footer-cell {
-    width: 30px; /* Adjust as needed */
+    width: 30px; 
     text-align: center;
     margin: 0 3px;
   }
@@ -21,7 +21,7 @@
   }
   
   .side-label {
-    width: 30px; /* Adjust as needed */
+    width: 30px; 
     text-align: center;
   }
   
@@ -33,5 +33,8 @@
     cursor: pointer;
   }
   
-  /* Add additional styling as needed */
+  .ship-square {
+    background-color: lightgrey;
+  }
+  
   
