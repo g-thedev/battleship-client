@@ -7,6 +7,8 @@ import LoginPage from './pages/Login';
 import Homepage from './pages/Homepage';
 import LobbyPage from './pages/Lobby';
 import ProfilePage from './pages/Profile';
+import GameSetup from './pages/GameSetup';
+import GameRoom from './pages/GameRoom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
@@ -25,6 +27,7 @@ const App: React.FC = () => {
                   <Route path="/" element={<PrivateRoute element={<Homepage />} />} />
                   <Route path="/lobby" element={<PrivateRoute element={<LobbyPage />} />} />
                   <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
+                  <Route path="/game-setup" element={<PrivateRoute element={<GameSetup />} />} />
                   {/* Add other routes here */}
               </Routes>
           </Router>

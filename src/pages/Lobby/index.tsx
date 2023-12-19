@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useNavigate } from 'react-router-dom';
 import './style.css';
 
 const ENDPOINT = 'http://localhost:3000';
 
 const Lobby = () => {
+    const navigate = useNavigate();
+
     const [socket, setSocket] = useState<Socket | null>(null);
     const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
 
@@ -55,6 +58,21 @@ const Lobby = () => {
             };
         }
     }, []);
+
+    useEffect(() => {
+        if (socket) {
+            socket.on('room_ready', (data) => {
+                // Use navigate to redirect to GameSetup with the roomId
+                console.log('Room ready:', data);
+                navigate(`/game-setup?roomId=${data.roomId}`);
+            });
+    
+            // Cleanup when component unmounts
+            return () => {
+                socket.off('room_ready');
+            };
+        }
+    }, [socket, navigate]);
 
     // TODO - Add a useEffect hook to handle the user returning to the lobby
     //       after being disconnected due to reloading the page or closing the tab
