@@ -62,7 +62,6 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
   };
 
   const handleMouseDown = (square: string) => {
-    console.log(`Mouse down on ${square}`);
     if (isFirstClick) {
       setStartSquare(square);
       setIsFirstClick(false);
