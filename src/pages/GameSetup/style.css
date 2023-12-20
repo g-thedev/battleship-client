@@ -1,0 +1,16 @@
+.game-setup-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+.button-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 410px;
+    width: 185px;
+}
