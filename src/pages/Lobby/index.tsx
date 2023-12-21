@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from '../../context/SocketContext';
 import './style.css';
-
-const ENDPOINT = 'http://localhost:3000';
 
 const Lobby = () => {
     const navigate = useNavigate();
-
-    const [socket, setSocket] = useState<Socket | null>(null);
+    const socket = useSocket();
+    
     const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
 
     const currentUserId = localStorage.getItem('user_id');
@@ -21,54 +19,36 @@ const Lobby = () => {
     
 
     useEffect(() => {
-        // Retrieve the token from local storage
-        const token = localStorage.getItem('accessToken');
+        if (socket) {
 
-        // Initialize the socket only if the token exists
-        if (token) {
-            const newSocket: Socket = io(ENDPOINT, {
-                auth: {
-                    token: token,
-                },
-            });
-
-            newSocket.on('update_lobby', (users) => {
+            socket.on('update_lobby', (users) => {
                 setLobbyUsers(users);
             });
 
-            newSocket.on('challenge_received', (data) => {
+            socket.on('challenge_received', (data) => {
                 setChallenger(data);
                 console.log('Challenge received:', data);
             });
 
-            newSocket.on('challenge_accepted', (data) => {
+            socket.on('challenge_accepted', (data) => {
                 console.log('Challenge accepted:', data);
             });
 
-            newSocket.on('connect_error', (error) => {
+            socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
             });
 
-            // Set the socket state
-            setSocket(newSocket);
-
-            // Cleanup function to disconnect the socket when the component unmounts
-            return () => {
-                newSocket.disconnect();
-            };
-        }
-    }, []);
-
-    useEffect(() => {
-        if (socket) {
             socket.on('room_ready', (data) => {
-                // Use navigate to redirect to GameSetup with the roomId
                 console.log('Room ready:', data);
                 navigate(`/game-setup?roomId=${data.roomId}`);
             });
     
             // Cleanup when component unmounts
             return () => {
+                socket.off('update_lobby');
+                socket.off('challenge_received');
+                socket.off('challenge_accepted');
+                socket.off('connect_error');
                 socket.off('room_ready');
             };
         }
