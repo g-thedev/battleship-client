@@ -1,27 +1,19 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../../context/AuthContext';
-import ConfirmationModal from '../Modal';
+import ConfirmationModal, { ConfirmationModalHandle } from '../Modal';
 import './style.css';
 
 const NavBar: React.FC = () => {
     const { isAuthenticated, logout } = useContext(AuthContext);
     const location = useLocation();
     const navigate = useNavigate();
-
-    const [showModal, setShowModal] = useState(false);
+    const modalRef = useRef<ConfirmationModalHandle>(null);
 
     const handleLeaveGame = () => {
-        setShowModal(true);
+        modalRef.current?.show();
     };
 
-    const handleConfirm = () => {
-        navigate('/');
-    };
-
-    const handleCancel = () => {
-        setShowModal(false);
-    };
 
     return (
         <div className="navbar-container">
@@ -35,11 +27,7 @@ const NavBar: React.FC = () => {
                         {location.pathname !== '/' && location.pathname !== '/game-setup' && location.pathname !== '/game-room' && <button onClick={() => navigate('/')}>Main Menu</button>}
                         {location.pathname !== '/game-setup' && location.pathname !== '/game-room' && <button onClick={logout}>Logout</button>}
                         {(location.pathname === '/game-setup' || location.pathname === '/game-room') && <button onClick={handleLeaveGame}>Leave Game</button>}
-                        <ConfirmationModal 
-                            showModal={showModal} 
-                            onConfirm={handleConfirm} 
-                            onCancel={handleCancel} 
-                        />
+                        <ConfirmationModal ref={ modalRef } />
                     </>
                 ) : (
                     <>
