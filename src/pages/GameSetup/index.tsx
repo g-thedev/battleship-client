@@ -1,22 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import Grid from '../../components/Grid';
 import Button from '../../components/button';
 import './style.css';
 
 const GameSetup = () => {
-    const location = useLocation();
-    const socket = useSocket();
+    const { socket, roomId } = useSocket();
     const currentUserId = localStorage.getItem('user_id');
-
-    // Function to parse query parameters
-    const getQueryParam = (param: string) => {
-        const queryParams = new URLSearchParams(location.search);
-        return queryParams.get(param);
-    };
-
-    const roomId = getQueryParam('roomId');
 
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
@@ -74,6 +64,14 @@ const GameSetup = () => {
 
             socket.on('opponent_reset', (data) => {
                 console.log('Opponent reset:', data);
+            });
+
+            socket.on('opponent_left', (data) => {
+                console.log('Opponent left:', data);
+            });
+
+            socket.on('game_cancelled', (data) => {
+                console.log('Game cancelled:', data);
             });
 
             // Cleanup when component unmounts

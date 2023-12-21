@@ -1,5 +1,6 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import { useState, forwardRef, useImperativeHandle } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from '../../../context/SocketContext';
 import './style.css';
 
 export interface ConfirmationModalHandle {
@@ -7,8 +8,10 @@ export interface ConfirmationModalHandle {
 }
 
 const ConfirmationModal = forwardRef<ConfirmationModalHandle>((props, ref) => {
+    const { socket, roomId } = useSocket();
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
+    const currentUserId = localStorage.getItem('user_id');
 
     useImperativeHandle(ref, () => ({
         show() {
@@ -21,6 +24,7 @@ const ConfirmationModal = forwardRef<ConfirmationModalHandle>((props, ref) => {
     }
 
     const handleConfirm = () => {
+        socket?.emit('leave_game', {roomId, playerId: currentUserId, currentRoom: 'game-setup' });
         navigate('/');
         setShowModal(false);
     };
