@@ -5,7 +5,7 @@ import './style.css';
 
 const Lobby = () => {
     const navigate = useNavigate();
-    const socket = useSocket();
+    const { socket, updateRoomId } = useSocket();
     
     const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
 
@@ -39,7 +39,10 @@ const Lobby = () => {
             });
 
             socket.on('room_ready', (data) => {
-                console.log('Room ready:', data);
+                if (updateRoomId) {
+                    console.log('Updating room id:', data.roomId);
+                    updateRoomId(data.roomId);
+                }
                 navigate(`/game-setup?roomId=${data.roomId}`);
             });
     

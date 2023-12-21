@@ -18,21 +18,23 @@ const PrivateRoute: React.FC<{ element: JSX.Element }> = ({ element }) => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
+  <AuthProvider>
+    <Router>
+      <SocketProvider>
         <NavBar />
         <Routes>
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<PrivateRoute element={<Homepage />} />} />
           <Route path="/profile" element={<PrivateRoute element={<ProfilePage />} />} />
-          <Route path="/lobby" element={<PrivateRoute element={<SocketProvider><LobbyPage /></SocketProvider>} />} />
-          <Route path="/game-setup" element={<PrivateRoute element={<SocketProvider><GameSetup /></SocketProvider>} />} />
-          <Route path="/game-room" element={<PrivateRoute element={<SocketProvider><GameRoom /></SocketProvider>} />} />
+          <Route path="/lobby" element={<PrivateRoute element={<LobbyPage />} />} />
+          <Route path="/game-setup" element={<PrivateRoute element={<GameSetup />} />} />
+          <Route path="/game-room" element={<PrivateRoute element={<GameRoom />} />} />
           {/* Add other routes here */}
         </Routes>
-      </Router>
-    </AuthProvider>
+      </SocketProvider>
+    </Router>
+  </AuthProvider>
   );
 };
 
