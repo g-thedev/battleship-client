@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { useLocation } from 'react-router-dom';
+import { useSocket } from '../../context/SocketContext';
 import Grid from '../../components/Grid';
 import Button from '../../components/button';
 import './style.css';
 
 const GameSetup = () => {
     const location = useLocation();
+    const socket = useSocket();
+    const currentUserId = localStorage.getItem('user_id');
 
     // Function to parse query parameters
     const getQueryParam = (param: string) => {
@@ -52,7 +54,40 @@ const GameSetup = () => {
 
     const resetShips = () => {
         setShips(initialShipsState);
+        socket?.emit('reset_ships', { playerId: currentUserId, roomId });
     };
+
+    useEffect(() => {
+        if (socket) {
+            socket.on('connect_error', (error) => {
+                console.error('Connection error:', error);
+            });
+
+            socket.on('opponent_ready', (data) => {
+                console.log('Opponent is ready:', data);
+            }
+            );
+
+            socket.on('all_players_ready', (data) => {
+                console.log('All players are ready:', data);
+            });
+
+            socket.on('opponent_reset', (data) => {
+                console.log('Opponent reset:', data);
+            });
+
+            // Cleanup when component unmounts
+            return () => {
+                socket.off('connect_error');
+                socket.off('opponent_ready');
+                socket.off('all_players_ready');
+            };
+        }
+    });
+
+    const handleReady = () => {
+        socket?.emit('player_ready', { playerId: currentUserId, roomId, ships });
+    }
 
     return (
         <div className="game-setup-container">
@@ -91,7 +126,7 @@ const GameSetup = () => {
             <div className='button-container'>
                 {Object.values(ships).every(ship => ship.length > 0) && (
                     <>
-                        <Button className='button-ready' text="Ready" onClick={() => console.log('Ready')} />
+                        <Button className='button-ready' text="Ready" onClick={handleReady} />
                         <Button className='button-placed' text="Reset All Ships" onClick={resetShips} />
                     </>
                 )}
@@ -102,30 +137,3 @@ const GameSetup = () => {
 }
 
 export default GameSetup;
-
-
-
-
-
-   // ... use roomId as needed for your game setup logic
-
-    // useEffect(() => {
-    //     const socket: Socket = io(); // Create a socket instance
-
-    //     // Set up listeners for game-related events
-    //     socket.on('game-event', (data) => {
-    //         // Handle game events
-    //     });
-        
-    //     return () => {
-    //         // Clean up listeners when component unmounts
-    //         socket.off('game-event');
-    //     };
-    // }, []);
-
-
-    // const socket: Socket = io(); // Create a socket instance
-
-    // // ...
-
-    // socket.emit('join-game', { roomId }); // Emit the 'join-game' event with the roomId
