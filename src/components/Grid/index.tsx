@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSocket } from '../../context/SocketContext';
 import './style.css';
 
 
@@ -9,15 +10,32 @@ interface GridProps {
   onShipPlacement?: (coordinates: string[]) => void;
   currentPlayersBoard?: boolean;
   gameBoard?: boolean;
+  currentPlayerTurn?: boolean;
+  updateCurrentPlayerTurn?: (currentPlayer: string) => void;
+  currentLocation?: string;
 }
 
-const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onShipPlacement, currentPlayersBoard, gameBoard }) => {
+
+const Grid: React.FC<GridProps> = ({ 
+  setCurrentShip, 
+  currentShipSize, 
+  ships, 
+  onShipPlacement, 
+  currentPlayersBoard, 
+  gameBoard, 
+  currentPlayerTurn ,
+  updateCurrentPlayerTurn,
+  currentLocation
+}) => {
+  const { socket, roomId } = useSocket();
+  const currentPlayerId = localStorage.getItem('user_id');
   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
   const cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const [startSquare, setStartSquare] = useState<string | null>(null);
   const [isFirstClick, setIsFirstClick] = useState(true);
   const [hoverSquare, setHoverSquare] = useState<string | null>(null);
-
+  const [shots, setShots] = useState({ hits: new Set(), misses: new Set() });
+  
   const isOverlapping = (coordinates: string[]) => {
     return coordinates.some(coordinate => 
         Object.values(ships ?? {}).flat().includes(coordinate)
@@ -64,10 +82,15 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
   };
 
   const handleMouseDown = (square: string) => {
-    if (gameBoard) {
+    if (gameBoard && currentPlayerTurn) {
+      if (shots.hits.has(square) || shots.misses.has(square)) return;
+
+      socket?.emit('shot_called', { square, roomId, currentPlayerId });
 
     } else if (currentPlayersBoard) {
-
+      return;
+    } else if (currentLocation === '/game-room') {
+      return;
     } else {
       if (isFirstClick) {
         setStartSquare(square);
@@ -92,49 +115,102 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
     ? getCoordinates(startSquare, hoverSquare) 
     : [];
 
-    return (
-      <div className={`grid-container${currentPlayersBoard ? " scale-down" : ""}`}>
-        {!currentPlayersBoard && (
-          <div className="header">
-            {cols.map((col) => (
-              <div key={col} className="header-cell">{col}</div>
-            ))}
-          </div>
-        )}
-        {rows.map((row) => (
-          <div key={row} className="row">
-            {!currentPlayersBoard && <div className="side-label">{row}</div>}
-            {cols.map((col) => {
-              const square = `${row}${col}`;
-              const isShipSquare = ships && Object.values(ships).flat().includes(square);
-              const isProjectionSquare = projectionCoordinates.includes(square);
-              let squareClass = "square";
-              if (isShipSquare) {
-                squareClass += " ship-square";
-              } else if (isProjectionSquare) {
-                squareClass += " projection-square";
-              }
-              return (
-                <div
-                  key={col}
-                  className={squareClass}
-                  onMouseDown={() => handleMouseDown(square)}
-                  onMouseOver={() => setHoverSquare(square)}
-                />
-              );
-            })}
-            {!currentPlayersBoard && <div className="side-label">{row}</div>}
-          </div>
-        ))}
-        {!currentPlayersBoard && (
-          <div className="footer">
-            {cols.map((col) => (
-              <div key={col} className="footer-cell">{col}</div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+  useEffect(() => {
+
+    if (socket) {
+      socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
+      });
+
+      socket.on('ship_sunk', (data) => {
+        console.log('Ship sunk', data);
+        if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
+          setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
+        }
+        updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
+        console.log(currentPlayerTurn)
+      });
+
+      socket.on('shot_hit', (data) => {
+        if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
+          setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
+        }
+        updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
+      });
+
+      socket.on('shot_miss', (data) => {
+        if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
+          setShots(prev => ({ hits: prev.hits, misses: new Set(prev.misses).add(data.square) }));
+        }
+        updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
+      });
+
+      socket.on('game_over', (data) => {
+        console.log('Game over:', data);
+      });
+
+      socket.on('disconnect', (reason) => {
+        console.log('Disconnected:', reason);
+      });
+
+      return () => {
+        socket.off('shot_hit');
+        socket.off('shot_miss');
+        socket.off('ship_sunk');
+      };
+    }
+  }, [socket, currentPlayerTurn]);
+
+  return (
+    <div className={`grid-container${currentPlayersBoard ? " scale-down" : ""}`}>
+      {!currentPlayersBoard && (
+        <div className="header">
+          {cols.map((col) => (
+            <div key={col} className="header-cell">{col}</div>
+          ))}
+        </div>
+      )}
+      {rows.map((row) => (
+        <div key={row} className="row">
+          {!currentPlayersBoard && <div className="side-label">{row}</div>}
+          {cols.map((col) => {
+            const square = `${row}${col}`;
+            const isShipSquare = ships && Object.values(ships).flat().includes(square);
+            const isProjectionSquare = projectionCoordinates.includes(square);
+            let squareClass = "square";
+            if (isShipSquare) {
+              squareClass += " ship-square";
+            } else if (isProjectionSquare) {
+              squareClass += " projection-square";
+            }
+
+            if (shots.hits.has(square)) {
+              squareClass += " hit";
+            } else if (shots.misses.has(square)) {
+              squareClass += " missed";
+            }
+
+            return (
+              <div
+                key={col}
+                className={squareClass}
+                onMouseDown={() => handleMouseDown(square)}
+                onMouseOver={() => setHoverSquare(square)}
+              />
+            );
+          })}
+          {!currentPlayersBoard && <div className="side-label">{row}</div>}
+        </div>
+      ))}
+      {!currentPlayersBoard && (
+        <div className="footer">
+          {cols.map((col) => (
+            <div key={col} className="footer-cell">{col}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Grid;
