@@ -11,6 +11,8 @@
 }
 
 .modal {
+    position: relative;
+    bottom: 100px;
     background-color: #242424;
     padding: 20px;
     border-radius: 5px;
