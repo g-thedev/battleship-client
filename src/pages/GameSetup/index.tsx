@@ -62,7 +62,8 @@ const GameSetup = () => {
 
             socket.on('all_players_ready', (data) => {
                 console.log('All players are ready:', data);
-                navigate(`/game-room?roomId=${roomId}`, { state: { ships } });
+                const currentPlayerTurn = data.currentPlayerTurn
+                navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn} });
             });
 
             socket.on('opponent_reset', (data) => {
