@@ -3,13 +3,15 @@ import './style.css';
 
 
 interface GridProps {
-  setCurrentShip: (shipType: string) => void;
-  currentShipSize: number;
-  ships: { [key: string]: string[] };
-  onShipPlacement: (coordinates: string[]) => void;
+  setCurrentShip?: (shipType: string) => void;
+  currentShipSize?: number;
+  ships?: { [key: string]: string[] };
+  onShipPlacement?: (coordinates: string[]) => void;
+  currentPlayersBoard?: boolean;
+  gameBoard?: boolean;
 }
 
-const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onShipPlacement }) => {
+const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onShipPlacement, currentPlayersBoard, gameBoard }) => {
   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
   const cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const [startSquare, setStartSquare] = useState<string | null>(null);
@@ -18,7 +20,7 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
 
   const isOverlapping = (coordinates: string[]) => {
     return coordinates.some(coordinate => 
-        Object.values(ships).flat().includes(coordinate)
+        Object.values(ships ?? {}).flat().includes(coordinate)
     );
   };
 
@@ -43,7 +45,7 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
     const isIncrement = isHorizontal ? endCol > startCol : rows.indexOf(endRow) > rows.indexOf(startRow);
 
     if (isHorizontal) {
-        for (let i = 0; i < currentShipSize; i++) {
+        for (let i = 0; i < (currentShipSize as number); i++) {
             const col = isIncrement ? startCol + i : startCol - i;
             if (col >= 1 && col <= cols.length) {
                 coordinates.push(`${startRow}${col}`);
@@ -51,7 +53,7 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
         }
     } else {
         let startRowIndex = rows.indexOf(startRow);
-        for (let i = 0; i < currentShipSize; i++) {
+        for (let i = 0; i < (currentShipSize ?? 0); i++) {
             const rowIndex = isIncrement ? startRowIndex + i : startRowIndex - i;
             if (rowIndex >= 0 && rowIndex < rows.length) {
                 coordinates.push(`${rows[rowIndex]}${startCol}`);
@@ -62,19 +64,27 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
   };
 
   const handleMouseDown = (square: string) => {
-    if (isFirstClick) {
-      setStartSquare(square);
-      setIsFirstClick(false);
+    if (gameBoard) {
+
+    } else if (currentPlayersBoard) {
+
     } else {
-      const shipCoordinates = startSquare ? getCoordinates(startSquare, square) : [];
-      if (shipCoordinates.length === currentShipSize && isWithinBounds(shipCoordinates) && !isOverlapping(shipCoordinates)) {
-        onShipPlacement(shipCoordinates);
+      if (isFirstClick) {
+        setStartSquare(square);
+        setIsFirstClick(false);
       } else {
-        console.log("Invalid ship placement.");
+        const shipCoordinates = startSquare ? getCoordinates(startSquare, square) : [];
+        if (shipCoordinates.length === currentShipSize && isWithinBounds(shipCoordinates) && !isOverlapping(shipCoordinates)) {
+          if (onShipPlacement) {
+            onShipPlacement(shipCoordinates);
+          }
+        } else {
+          console.log("Invalid ship placement.");
+        }
+        setIsFirstClick(true);
+        setStartSquare(null);
+        setCurrentShip && setCurrentShip('');
       }
-      setIsFirstClick(true);
-      setStartSquare(null);
-      setCurrentShip('');
     }
   };
 
@@ -82,45 +92,49 @@ const Grid: React.FC<GridProps> = ({ setCurrentShip, currentShipSize, ships, onS
     ? getCoordinates(startSquare, hoverSquare) 
     : [];
 
-  return (
-    <div className="grid-container">
-      <div className="header">
-        {cols.map((col) => (
-          <div key={col} className="header-cell">{col}</div>
+    return (
+      <div className={`grid-container${currentPlayersBoard ? " scale-down" : ""}`}>
+        {!currentPlayersBoard && (
+          <div className="header">
+            {cols.map((col) => (
+              <div key={col} className="header-cell">{col}</div>
+            ))}
+          </div>
+        )}
+        {rows.map((row) => (
+          <div key={row} className="row">
+            {!currentPlayersBoard && <div className="side-label">{row}</div>}
+            {cols.map((col) => {
+              const square = `${row}${col}`;
+              const isShipSquare = ships && Object.values(ships).flat().includes(square);
+              const isProjectionSquare = projectionCoordinates.includes(square);
+              let squareClass = "square";
+              if (isShipSquare) {
+                squareClass += " ship-square";
+              } else if (isProjectionSquare) {
+                squareClass += " projection-square";
+              }
+              return (
+                <div
+                  key={col}
+                  className={squareClass}
+                  onMouseDown={() => handleMouseDown(square)}
+                  onMouseOver={() => setHoverSquare(square)}
+                />
+              );
+            })}
+            {!currentPlayersBoard && <div className="side-label">{row}</div>}
+          </div>
         ))}
+        {!currentPlayersBoard && (
+          <div className="footer">
+            {cols.map((col) => (
+              <div key={col} className="footer-cell">{col}</div>
+            ))}
+          </div>
+        )}
       </div>
-      {rows.map((row) => (
-        <div key={row} className="row">
-          <div className="side-label">{row}</div>
-          {cols.map((col) => {
-            const square = `${row}${col}`;
-            const isShipSquare = Object.values(ships).flat().includes(square);
-            const isProjectionSquare = projectionCoordinates.includes(square);
-            let squareClass = "square";
-            if (isShipSquare) {
-              squareClass += " ship-square";
-            } else if (isProjectionSquare) {
-              squareClass += " projection-square";
-            }
-            return (
-              <div
-                key={col}
-                className={squareClass}
-                onMouseDown={() => handleMouseDown(square)}
-                onMouseOver={() => setHoverSquare(square)}
-              />
-            );
-          })}
-          <div className="side-label">{row}</div>
-        </div>
-      ))}
-      <div className="footer">
-        {cols.map((col) => (
-          <div key={col} className="footer-cell">{col}</div>
-        ))}
-      </div>
-    </div>
-  );  
+    );
 };
 
 export default Grid;

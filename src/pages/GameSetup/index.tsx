@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from '../../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 import Grid from '../../components/Grid';
 import Button from '../../components/button';
 import './style.css';
 
 const GameSetup = () => {
     const { socket, roomId } = useSocket();
+    const navigate = useNavigate();
     const currentUserId = localStorage.getItem('user_id');
 
     const shipTypes: { [key: string]: number } = {
@@ -60,6 +62,7 @@ const GameSetup = () => {
 
             socket.on('all_players_ready', (data) => {
                 console.log('All players are ready:', data);
+                navigate(`/game-room?roomId=${roomId}`, { state: { ships } });
             });
 
             socket.on('opponent_reset', (data) => {
