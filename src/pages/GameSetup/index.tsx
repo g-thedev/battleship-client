@@ -83,6 +83,9 @@ const GameSetup = () => {
                 socket.off('connect_error');
                 socket.off('opponent_ready');
                 socket.off('all_players_ready');
+                socket.off('opponent_reset');
+                socket.off('opponent_left');
+                socket.off('game_cancelled');
             };
         }
     });
