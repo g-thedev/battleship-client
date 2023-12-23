@@ -1,7 +1,27 @@
 .lobby {
     color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* justify-content: center; */
+    height: 100vh;
+}
+
+.lobby ul {
+    padding: unset;
 }
 
 .lobby ul li {
     list-style-type: none;
+}
+
+.lobby ul li input {
+    margin-right: 10px;
+}
+
+.confirmation {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
 }

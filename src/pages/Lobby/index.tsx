@@ -117,13 +117,13 @@ const Lobby = () => {
                 <p>Selected user has been disconnected!</p>
             )}
             {challenger && challenger.challengerUserId && (
-                <div>
+                <div className='confirmation'>
                     <p>{challenger.challengerUsername} has challenged you!</p>
                     <button onClick={handleAcceptChallenge}>Accept</button>
                 </div>
             )}
             {opponentId && lobbyUsers[opponentId] && (
-                <div>
+                <div className='confirmation'>
                     <p>Challenge {lobbyUsers[opponentId].username}?</p>
                     <button onClick={handleChallenge}>Confirm</button>
                 </div>
