@@ -1,14 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSocket } from '../../context/SocketContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Grid from '../../components/Grid';
 import Button from '../../components/button';
 import './style.css';
 
+interface SocketData {
+    message?: string;
+  }
+
+
 const GameSetup = () => {
     const { socket, roomId } = useSocket();
     const navigate = useNavigate();
+    const location = useLocation();
+    const intervalIdRef = useRef<number | null>(null);
+    const [countdown, setCountdown] = useState(5);
     const currentUserId = localStorage.getItem('user_id');
+    const [gameCancelled, setGameCancelled] = useState<string>('');
+    const [opponentReady, setOpponentReady] = useState<string>('');
 
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
@@ -49,6 +59,25 @@ const GameSetup = () => {
         socket?.emit('reset_ships', { playerId: currentUserId, roomId });
     };
 
+    const handleGameCancelled = useCallback((data: SocketData) => {
+        console.log('Game cancelled:', data);
+        setGameCancelled(data.message || '');
+        setOpponentReady('');
+
+        socket?.emit('leave_game', {roomId, playerId: currentUserId, currentRoom: location.pathname });
+
+        setCountdown(5);
+        intervalIdRef.current = window.setInterval(() => {
+            setCountdown((prevCountdown) => {
+                if (prevCountdown === 1) {
+                    clearInterval(intervalIdRef.current as number);
+                    navigate('/');
+                }
+                return prevCountdown - 1;
+            });
+        }, 1000);
+    }, [navigate]);
+
     useEffect(() => {
         if (socket) {
             socket.on('connect_error', (error) => {
@@ -57,6 +86,7 @@ const GameSetup = () => {
 
             socket.on('opponent_ready', (data) => {
                 console.log('Opponent is ready:', data);
+                setOpponentReady(data.username);
             }
             );
 
@@ -70,25 +100,22 @@ const GameSetup = () => {
                 console.log('Opponent reset:', data);
             });
 
-            socket.on('opponent_left', (data) => {
-                console.log('Opponent left:', data);
-            });
-
-            socket.on('game_cancelled', (data) => {
-                console.log('Game cancelled:', data);
-            });
+            socket.on('game_cancelled', handleGameCancelled);
 
             // Cleanup when component unmounts
             return () => {
+                if (intervalIdRef.current) {
+                    clearInterval(intervalIdRef.current);
+                }
+
                 socket.off('connect_error');
                 socket.off('opponent_ready');
                 socket.off('all_players_ready');
-                socket.off('opponent_reset');
-                socket.off('opponent_left');
                 socket.off('game_cancelled');
+                socket.off('opponent_reset');
             };
         }
-    });
+    }, [handleGameCancelled]);
 
     const handleReady = () => {
         socket?.emit('player_ready', { playerId: currentUserId, roomId, ships });
@@ -121,6 +148,11 @@ const GameSetup = () => {
             </div>
             <div>
                 <h1>Game Setup</h1>
+                <div className="status-bar">
+                    {opponentReady && <p>{opponentReady} is ready!</p>}
+                    {gameCancelled && <p>{gameCancelled}</p>}
+                    {gameCancelled && <p>Redirecting to home page in {countdown} seconds...</p>}
+                </div>
                 <Grid
                     setCurrentShip = {setCurrentShip}
                     currentShipSize={currentShip ? shipTypes[currentShip as keyof typeof shipTypes] : 0}
@@ -129,12 +161,18 @@ const GameSetup = () => {
                 />
             </div>
             <div className='button-container'>
-                {Object.values(ships).every(ship => ship.length > 0) && (
-                    <>
-                        <Button className='button-ready' text="Ready" onClick={handleReady} />
-                        <Button className='button-placed' text="Reset All Ships" onClick={resetShips} />
-                    </>
-                )}
+                <Button 
+                    className='button-ready' 
+                    text="Ready" 
+                    onClick={handleReady} 
+                    disabled={!Object.values(ships).every(ship => ship.length > 0)}
+                />
+                <Button 
+                    className='button-placed' 
+                    text="Reset All Ships" 
+                    onClick={resetShips} 
+                    disabled={!Object.values(ships).some(ship => ship.length > 0)}
+                />
             </div>
 
         </div>
