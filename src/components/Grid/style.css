@@ -54,3 +54,7 @@
     background-color: blue;
     pointer-events: none;
 }
+
+.disbaled {
+    pointer-events: none;
+}

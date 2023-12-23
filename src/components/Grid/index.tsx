@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import './style.css';
 
@@ -13,6 +13,12 @@ interface GridProps {
   currentPlayerTurn?: boolean;
   updateCurrentPlayerTurn?: (currentPlayer: string) => void;
   currentLocation?: string;
+  gameOver?: boolean;
+}
+
+interface SocketData {
+  square: string;
+  currentPlayerTurn: string;
 }
 
 
@@ -25,7 +31,8 @@ const Grid: React.FC<GridProps> = ({
   gameBoard, 
   currentPlayerTurn ,
   updateCurrentPlayerTurn,
-  currentLocation
+  currentLocation,
+  gameOver
 }) => {
   const { socket, roomId } = useSocket();
   const currentPlayerId = localStorage.getItem('user_id');
@@ -81,7 +88,7 @@ const Grid: React.FC<GridProps> = ({
     return coordinates;
   };
 
-  const handleMouseDown = (square: string) => {
+  const handleMouseDown = useCallback((square: string) => {
     if (gameBoard && currentPlayerTurn) {
       if (shots.hits.has(square) || shots.misses.has(square)) return;
 
@@ -109,57 +116,77 @@ const Grid: React.FC<GridProps> = ({
         setCurrentShip && setCurrentShip('');
       }
     }
-  };
+  }, [
+    gameBoard, 
+    currentPlayerTurn, 
+    shots, 
+    socket, 
+    roomId, 
+    currentPlayerId, 
+    currentPlayersBoard, 
+    currentLocation, 
+    isFirstClick, 
+    startSquare, 
+    getCoordinates, 
+    currentShipSize, 
+    isWithinBounds, 
+    isOverlapping, 
+    onShipPlacement, 
+    setStartSquare, 
+    setIsFirstClick, 
+    setCurrentShip
+  ]);
 
   const projectionCoordinates = hoverSquare && startSquare 
     ? getCoordinates(startSquare, hoverSquare) 
     : [];
 
-  useEffect(() => {
-
-    if (socket) {
-      socket.on('connect_error', (error) => {
-        console.error('Connection error:', error);
-      });
-
-      socket.on('ship_sunk', (data) => {
-        console.log('Ship sunk', data);
-        if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
-          setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
-        }
-        updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
-        console.log(currentPlayerTurn)
-      });
-
-      socket.on('shot_hit', (data) => {
-        if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
-          setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
-        }
-        updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
-      });
-
-      socket.on('shot_miss', (data) => {
-        if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
-          setShots(prev => ({ hits: prev.hits, misses: new Set(prev.misses).add(data.square) }));
-        }
-        updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
-      });
-
-      socket.on('game_over', (data) => {
-        console.log('Game over:', data);
-      });
-
-      socket.on('disconnect', (reason) => {
-        console.log('Disconnected:', reason);
-      });
-
-      return () => {
-        socket.off('shot_hit');
-        socket.off('shot_miss');
-        socket.off('ship_sunk');
-      };
-    }
-  }, [socket, currentPlayerTurn]);
+    const handleShipSunk = useCallback((data: SocketData) => {
+      console.log('Ship sunk', data);
+      if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
+        setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
+      }
+      updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
+    }, [currentPlayerTurn, gameBoard, currentPlayersBoard, setShots, updateCurrentPlayerTurn]);
+  
+    const handleShotHit = useCallback((data: SocketData) => {
+      if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
+        setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
+      }
+      updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
+    }, [currentPlayerTurn, gameBoard, currentPlayersBoard, setShots, updateCurrentPlayerTurn]);
+  
+    const handleShotMiss = useCallback((data: SocketData) => {
+      if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
+        setShots(prev => ({ hits: prev.hits, misses: new Set(prev.misses).add(data.square) }));
+      }
+      updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
+    }, [currentPlayerTurn, gameBoard, currentPlayersBoard, setShots, updateCurrentPlayerTurn]);
+  
+    useEffect(() => {
+      if (socket) {
+        socket.on('connect_error', (error) => {
+          console.error('Connection error:', error);
+        });
+  
+        socket.on('ship_sunk', handleShipSunk);
+        socket.on('shot_hit', handleShotHit);
+        socket.on('shot_miss', handleShotMiss);
+  
+  
+        socket.on('disconnect', (reason) => {
+          console.log('Disconnected:', reason);
+        });
+  
+        return () => {
+          socket.off('ship_sunk', handleShipSunk);
+          socket.off('shot_hit', handleShotHit);
+          socket.off('shot_miss', handleShotMiss);
+          socket.off('disconnect');
+          socket.off('connect_error');
+        };
+      }
+    }, [socket, handleShipSunk, handleShotHit, handleShotMiss]);
 
   return (
     <div className={`grid-container${currentPlayersBoard ? " scale-down" : ""}`}>
@@ -190,11 +217,15 @@ const Grid: React.FC<GridProps> = ({
               squareClass += " missed";
             }
 
+            if (gameOver) {
+              squareClass += " disbaled";
+            }
+
             return (
               <div
                 key={col}
                 className={squareClass}
-                onMouseDown={() => handleMouseDown(square)}
+                onClick={() => handleMouseDown(square)}
                 onMouseOver={() => setHoverSquare(square)}
               />
             );
