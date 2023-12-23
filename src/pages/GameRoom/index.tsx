@@ -6,18 +6,22 @@ import './style.css';
 
 interface SocketData {
     winner: string;
+    winnerId: string;
+    message?: string;
   }
 
 const GameRoom = () => {
     const { socket } = useSocket();
     const location = useLocation();
     const navigate = useNavigate();
-    const timeoutRef = useRef<number | null>(null);
+    const intervalIdRef = useRef<number | null>(null);
     const shipsState = location.state.ships;
     const currentUserId = localStorage.getItem('user_id');
     const [currentPlayerTurn, setCurrentPlayerTurn] = useState<boolean>(false);
     const [gameOver, setGameOver] = useState<boolean>(false);
-    const [winner, setWinner] = useState<string>('');
+    const [winner, setWinner] = useState<{ username: string; winnerId: string; message?: string }>({ username: '', winnerId: '', message: '' });
+    const [countdown, setCountdown] = useState(5);
+
 
     const updateCurrentPlayerTurn = (currentPlayer: string) => {
         if (currentPlayer === currentUserId) {
@@ -28,11 +32,18 @@ const GameRoom = () => {
     };
 
     const handleGameOver = useCallback((data: SocketData) => {
-        setWinner(data.winner);
+        setWinner({ username: data.winner, winnerId: data.winnerId, message: data.message });
         setGameOver(true);
 
-        timeoutRef.current = setTimeout(() => {
-            navigate('/');
+        setCountdown(5);
+        intervalIdRef.current = window.setInterval(() => {
+            setCountdown((prevCountdown) => {
+                if (prevCountdown === 1) {
+                    clearInterval(intervalIdRef.current as number);
+                    navigate('/');
+                }
+                return prevCountdown - 1;
+            });
         }, 5000);
     }, [setWinner, setGameOver, navigate]);
 
@@ -54,8 +65,8 @@ const GameRoom = () => {
           
 
         return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
+            if (intervalIdRef.current) {
+                clearInterval(intervalIdRef.current);
             }
 
             socket.off('game_over');
@@ -69,8 +80,9 @@ const GameRoom = () => {
         <div className="game-room">
             <h1>Game Room</h1>
             <div className='status-bar'>
-                {currentPlayerTurn && <p>Your turn!</p>}
-                {gameOver && <h2>{winner} wins!</h2>}
+                {currentPlayerTurn && !gameOver && <p>Your turn!</p>}
+                {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
+                {gameOver && <p>Redirecting to home page in {countdown} seconds...</p>}
             </div>
             <Grid gameBoard={true} currentPlayerTurn={currentPlayerTurn} updateCurrentPlayerTurn={updateCurrentPlayerTurn} currentLocation={location.pathname} gameOver={gameOver} />
             <Grid ships={shipsState} currentPlayersBoard={true} currentPlayerTurn={currentPlayerTurn}/>
