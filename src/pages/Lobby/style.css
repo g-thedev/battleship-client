@@ -29,3 +29,8 @@
     position: relative;
     right: 80px;
 }
+
+.status-bar {
+    height: 90px;
+    margin-bottom: 20px;
+}

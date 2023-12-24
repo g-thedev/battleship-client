@@ -13,12 +13,25 @@ const Lobby = () => {
 
     const [opponentId, setOpponentId] = useState<string>('');
     const [challenger, setChallenger] = useState<{ challengerUserId: string, challengerUsername: string }>({ challengerUserId: '', challengerUsername: '' });
+
+    const [message, setMessage] = useState<string>('');
     
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
     
 
     useEffect(() => {
+        const onChallengeRejected = (data: { message: any; }) => {
+            console.log('Challenge rejected:', data);
+            setOpponentId('');
+            setMessage(`${data.message}`);
+    
+            setTimeout(() => {
+                setMessage('');
+            }, 5000);
+        };
+
+
         if (socket) {
 
             socket.on('update_lobby', (users) => {
@@ -32,6 +45,9 @@ const Lobby = () => {
             socket.on('challenge_accepted', (data) => {
                 console.log('Challenge accepted:', data);
             });
+
+            socket.on('challenge_rejected', onChallengeRejected);
+
 
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
@@ -49,6 +65,7 @@ const Lobby = () => {
                 socket.off('update_lobby');
                 socket.off('challenge_received');
                 socket.off('challenge_accepted');
+                socket.off('challenge_rejected', onChallengeRejected);
                 socket.off('connect_error');
                 socket.off('room_ready');
             };
@@ -91,23 +108,36 @@ const Lobby = () => {
         }
     }
 
+    const handleRejectChallenge = () => {
+        if (challenger && socket) {
+            challenger && setChallenger({ challengerUserId: '', challengerUsername: '' });
+            socket.emit('reject_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
+        }
+    }
+
     return (
         <div className='lobby'>
             <ul>
-                {Object.values(lobbyUsers).filter(user => user.id !== currentUserId).map((user) => (
-                    <li key={user.id}>
-                        <input
-                            type='radio'
-                            id={user.id}
-                            name='userSelection'
-                            value={user.id}
-                            checked={opponentId === user.id}
-                            onChange={() => handleUserSelection(user.id)}
-                        />
-                        <label htmlFor={user.id}>{user.username}</label>
-                    </li>
-                ))}
-            </ul>
+                <div className='status-bar'>
+                    {message && <p>{message}</p>}
+                </div>
+                {Object.values(lobbyUsers)
+                    .filter(user => user.id !== currentUserId && !user.inPendingChallenge) 
+                    .map((user) => (
+                        <li key={user.id}>
+                            <input
+                                type='radio'
+                                id={user.id}
+                                name='userSelection'
+                                value={user.id}
+                                checked={opponentId === user.id}
+                                onChange={() => handleUserSelection(user.id)}
+                            />
+                            <label htmlFor={user.id}>{user.username}</label>
+                        </li>
+                    ))
+                }
+                </ul>
             {showDisconnectedMessage && (
                 <p>Selected user has been disconnected!</p>
             )}
@@ -115,12 +145,14 @@ const Lobby = () => {
                 <div className='confirmation'>
                     <p>{challenger.challengerUsername} has challenged you!</p>
                     <button onClick={handleAcceptChallenge}>Accept</button>
+                    <button onClick={handleRejectChallenge}>Reject</button>
                 </div>
             )}
             {opponentId && lobbyUsers[opponentId] && (
                 <div className='confirmation'>
                     <p>Challenge {lobbyUsers[opponentId].username}?</p>
                     <button onClick={handleChallenge}>Confirm</button>
+                    <button onClick={() => setOpponentId('')}>Cancel</button>
                 </div>
             )}
         </div>
