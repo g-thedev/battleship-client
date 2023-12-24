@@ -44,7 +44,7 @@ const GameRoom = () => {
                 }
                 return prevCountdown - 1;
             });
-        }, 5000);
+        }, 1000);
     }, [setWinner, setGameOver, navigate]);
 
     useEffect(() => {
