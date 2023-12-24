@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import './style.css';
+import NodeJS from 'node';
+
 
 const Lobby = () => {
     const navigate = useNavigate();
@@ -15,6 +17,10 @@ const Lobby = () => {
     const [challenger, setChallenger] = useState<{ challengerUserId: string, challengerUsername: string }>({ challengerUserId: '', challengerUsername: '' });
 
     const [message, setMessage] = useState<string>('');
+
+    const [countDown, setCountDown] = useState(30); // Countdown state
+    const [showCountdown, setShowCountdown] = useState(false); // State to control countdown display
+
     
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
@@ -76,6 +82,35 @@ const Lobby = () => {
         }
     }, [socket, navigate]);
 
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId) {
+            setShowCountdown(true);
+            setCountDown(30); // Reset countdown to 30 seconds
+            timer = setInterval(() => {
+                setCountDown(prevCount => prevCount - 1);
+            }, 1000);
+        }
+
+        return () => {
+            clearInterval(timer);
+            setShowCountdown(false);
+        };
+    }, [challenger.challengerUserId, currentUserId]);
+
+    useEffect(() => {
+        if (countDown === 0) {
+            handleAutoRejectChallenge();
+        }
+    }, [countDown]);
+
+    const handleAutoRejectChallenge = () => {
+        handleRejectChallenge();
+        setShowCountdown(false);
+        setMessage(''); // Clear message
+    };
+
+
     // TODO - Add a useEffect hook to handle the user returning to the lobby
     //       after being disconnected due to reloading the page or closing the tab
 
@@ -124,6 +159,9 @@ const Lobby = () => {
             <ul>
                 <div className='status-bar'>
                     {message && <p>{message}</p>}
+                    {showCountdown && (
+                <p>Challenge expires in {countDown} seconds</p>
+            )}
                 </div>
                 {Object.values(lobbyUsers)
                     .filter(user => user.id !== currentUserId && !user.inPendingChallenge) 
