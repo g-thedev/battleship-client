@@ -61,7 +61,6 @@ const GameSetup = () => {
     };
 
     const handleGameCancelled = useCallback((data: SocketData) => {
-        console.log('Game cancelled:', data);
         setGameCancelled(data.message || '');
         setOpponentReady('');
 
@@ -86,20 +85,17 @@ const GameSetup = () => {
             });
 
             socket.on('opponent_ready', (data) => {
-                console.log('Opponent is ready:', data);
                 setOpponentReady(data.username);
                 setOpponentReset(false);
             }
             );
 
             socket.on('all_players_ready', (data) => {
-                console.log('All players are ready:', data);
                 const currentPlayerTurn = data.currentPlayerTurn
                 navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn} });
             });
 
             socket.on('opponent_reset', (data) => {
-                console.log('Opponent reset:', data);
                 setOpponentReset(true);
             });
 

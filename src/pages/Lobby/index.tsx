@@ -27,7 +27,6 @@ const Lobby = () => {
 
             socket.on('challenge_received', (data) => {
                 setChallenger(data);
-                console.log('Challenge received:', data);
             });
 
             socket.on('challenge_accepted', (data) => {
@@ -40,7 +39,6 @@ const Lobby = () => {
 
             socket.on('room_ready', (data) => {
                 if (updateRoomId) {
-                    console.log('Updating room id:', data.roomId);
                     updateRoomId(data.roomId);
                 }
                 navigate(`/game-setup?roomId=${data.roomId}`);
@@ -84,14 +82,12 @@ const Lobby = () => {
     const handleChallenge = () => {
         if (opponentId && socket) {
             socket.emit('request_challenge', { challengedUserId: opponentId, challengerUserId: currentUserId });
-            console.log(`Challenge request sent to ${lobbyUsers[opponentId].username}`);
         }
     };
 
     const handleAcceptChallenge = () => {
         if (challenger && socket) {
             socket.emit('accept_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
-            console.log('Challenge accepted');
         }
     }
 
