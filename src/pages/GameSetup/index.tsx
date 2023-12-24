@@ -19,6 +19,7 @@ const GameSetup = () => {
     const currentUserId = localStorage.getItem('user_id');
     const [gameCancelled, setGameCancelled] = useState<string>('');
     const [opponentReady, setOpponentReady] = useState<string>('');
+    const [opponentReset, setOpponentReset] = useState<boolean>(false);
 
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
@@ -87,6 +88,7 @@ const GameSetup = () => {
             socket.on('opponent_ready', (data) => {
                 console.log('Opponent is ready:', data);
                 setOpponentReady(data.username);
+                setOpponentReset(false);
             }
             );
 
@@ -98,6 +100,7 @@ const GameSetup = () => {
 
             socket.on('opponent_reset', (data) => {
                 console.log('Opponent reset:', data);
+                setOpponentReset(true);
             });
 
             socket.on('game_cancelled', handleGameCancelled);
@@ -149,7 +152,8 @@ const GameSetup = () => {
             <div>
                 <h1>Game Setup</h1>
                 <div className="status-bar">
-                    {opponentReady && <p>{opponentReady} is ready!</p>}
+                    {opponentReady && !opponentReset && <p>{opponentReady} is ready!</p>}
+                    {opponentReset && <p>{opponentReady} has reset their ships!</p>}
                     {gameCancelled && <p>{gameCancelled}</p>}
                     {gameCancelled && <p>Redirecting to home page in {countdown} seconds...</p>}
                 </div>
