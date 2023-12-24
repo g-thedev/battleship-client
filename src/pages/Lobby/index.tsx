@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import './style.css';
-import NodeJS from 'node';
+// import NodeJS from 'node';
 
 
 const Lobby = () => {
@@ -15,6 +15,7 @@ const Lobby = () => {
 
     const [opponentId, setOpponentId] = useState<string>('');
     const [challenger, setChallenger] = useState<{ challengerUserId: string, challengerUsername: string }>({ challengerUserId: '', challengerUsername: '' });
+    const [isChallenger, setIsChallenger] = useState(false);
 
     const [message, setMessage] = useState<string>('');
 
@@ -82,33 +83,70 @@ const Lobby = () => {
         }
     }, [socket, navigate]);
 
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId) {
-            setShowCountdown(true);
-            setCountDown(30); // Reset countdown to 30 seconds
-            timer = setInterval(() => {
-                setCountDown(prevCount => prevCount - 1);
-            }, 1000);
-        }
-
-        return () => {
-            clearInterval(timer);
-            setShowCountdown(false);
-        };
-    }, [challenger.challengerUserId, currentUserId]);
-
-    useEffect(() => {
-        if (countDown === 0) {
-            handleAutoRejectChallenge();
-        }
-    }, [countDown]);
-
     const handleAutoRejectChallenge = () => {
-        handleRejectChallenge();
-        setShowCountdown(false);
-        setMessage(''); // Clear message
+        if (challenger && socket) {
+            socket.emit('reject_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
+            setShowCountdown(false); // Hide the countdown
+            setMessage('Challenge auto-rejected due to timeout.'); // Set the timeout message
+    
+            // Use setTimeout to clear the message after 5 seconds
+            setTimeout(() => {
+                setMessage(''); // Clear the message
+            }, 5000);
+    
+            setChallenger({ challengerUserId: '', challengerUsername: '' }); // Reset challenger info
+        }
     };
+
+// Countdown useEffect for the challenger
+useEffect(() => {
+    let timer: number;
+    if (isChallenger) {
+        setShowCountdown(true);
+        setCountDown(30); // Reset countdown to 30 seconds
+        timer = setInterval(() => {
+            setCountDown((prevCount) => {
+                if (prevCount <= 1) {
+                    clearInterval(timer); // Clear the interval timer
+                    setShowCountdown(false); // Hide the countdown message
+                    setIsChallenger(false); // Reset challenger status
+                    return 0; // Set countdown to 0 and stop
+                }
+                return prevCount - 1;
+            });
+        }, 1000);
+    }
+
+    // Cleanup function for challenger
+    return () => {
+        clearInterval(timer);
+    };
+}, [isChallenger]);
+
+// Countdown useEffect for the challenged
+useEffect(() => {
+    let timer: number;
+    if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId && !isChallenger) {
+        setShowCountdown(true);
+        setCountDown(30); // Reset countdown to 30 seconds
+        timer = setInterval(() => {
+            setCountDown((prevCount) => {
+                if (prevCount <= 1) {
+                    clearInterval(timer); // Clear the interval timer
+                    setShowCountdown(false); // Hide the countdown message
+                    handleAutoRejectChallenge(); // Auto reject challenge
+                    return 0; // Set countdown to 0 and stop
+                }
+                return prevCount - 1;
+            });
+        }, 1000);
+    }
+
+    // Cleanup function for challenged
+    return () => {
+        clearInterval(timer);
+    };
+}, [challenger.challengerUserId, currentUserId]);
 
 
     // TODO - Add a useEffect hook to handle the user returning to the lobby
@@ -137,6 +175,7 @@ const Lobby = () => {
 
     const handleChallenge = () => {
         if (opponentId && socket) {
+            setIsChallenger(true);
             socket.emit('request_challenge', { challengedUserId: opponentId, challengerUserId: currentUserId });
         }
     };
