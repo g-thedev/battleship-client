@@ -19,3 +19,9 @@ button {
     color: white;
     /* Add any other styling you need */
 }
+
+.button-ready:disabled,
+.button-placed:disabled {
+    cursor: not-allowed; 
+    opacity: 0.5;
+}

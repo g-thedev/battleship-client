@@ -129,12 +129,18 @@ const GameSetup = () => {
                 />
             </div>
             <div className='button-container'>
-                {Object.values(ships).every(ship => ship.length > 0) && (
-                    <>
-                        <Button className='button-ready' text="Ready" onClick={handleReady} />
-                        <Button className='button-placed' text="Reset All Ships" onClick={resetShips} />
-                    </>
-                )}
+                <Button 
+                    className='button-ready' 
+                    text="Ready" 
+                    onClick={handleReady} 
+                    disabled={!Object.values(ships).every(ship => ship.length > 0)}
+                />
+                <Button 
+                    className='button-placed' 
+                    text="Reset All Ships" 
+                    onClick={resetShips} 
+                    disabled={!Object.values(ships).some(ship => ship.length > 0)}
+                />
             </div>
 
         </div>
