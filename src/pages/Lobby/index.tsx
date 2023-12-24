@@ -22,7 +22,6 @@ const Lobby = () => {
 
     useEffect(() => {
         const onChallengeRejected = (data: { message: any; }) => {
-            console.log('Challenge rejected:', data);
             setOpponentId('');
             setMessage(`${data.message}`);
     
@@ -36,6 +35,9 @@ const Lobby = () => {
 
             socket.on('update_lobby', (users) => {
                 setLobbyUsers(users);
+                if (opponentId && users[opponentId].inPendingChallenge) {
+                    setOpponentId('');
+                }
             });
 
             socket.on('challenge_received', (data) => {
@@ -48,6 +50,7 @@ const Lobby = () => {
 
             socket.on('challenge_rejected', onChallengeRejected);
 
+            socket.on('challenge_unavailable', onChallengeRejected);
 
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
@@ -66,6 +69,7 @@ const Lobby = () => {
                 socket.off('challenge_received');
                 socket.off('challenge_accepted');
                 socket.off('challenge_rejected', onChallengeRejected);
+                socket.off('challenge_unavailable', onChallengeRejected);
                 socket.off('connect_error');
                 socket.off('room_ready');
             };
