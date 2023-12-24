@@ -20,7 +20,10 @@ const Homepage: React.FC = () => {
             <h1>Main Menu</h1>
             <div className='menu-nav'>
                 <Button text="P v P" onClick={handleJoinPvP} />
-                <Button text="P v AI" onClick={() => {navigate('/')}} />
+                <div className='pvai-container'>
+                    <Button className='player-vs-ai' text="P v AI" onClick={() => {navigate('/')}} disabled={true}/>
+                    <p>Coming Soon!</p>
+                </div>
             </div>
         </div>
     );

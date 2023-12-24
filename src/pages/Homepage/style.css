@@ -4,3 +4,17 @@
   align-items: center;
 }
 
+.menu-nav {
+  display: flex;
+  flex-direction: horizontal;
+  align-items: center;
+  margin-top: 100px;
+}
+
+.pvai-container {
+  position: relative;
+}
+
+.pvai-container p {
+  position: absolute;
+}

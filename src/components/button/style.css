@@ -21,7 +21,8 @@ button {
 }
 
 .button-ready:disabled,
-.button-placed:disabled {
+.button-placed:disabled,
+.player-vs-ai:disabled {
     cursor: not-allowed; 
     opacity: 0.5;
 }
