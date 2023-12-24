@@ -146,7 +146,6 @@ const GameSetup = () => {
                 })}
             </div>
             <div>
-                <h1>Game Setup</h1>
                 <div className="status-bar">
                     {opponentReady && !opponentReset && <p>{opponentReady} is ready!</p>}
                     {opponentReset && <p>{opponentReady} has reset their ships!</p>}

@@ -17,7 +17,6 @@ const Homepage: React.FC = () => {
 
     return (
         <div className='main-menu-container'>
-            <h1>Main Menu</h1>
             <div className='menu-nav'>
                 <Button text="P v P" onClick={handleJoinPvP} />
                 <div className='pvai-container'>

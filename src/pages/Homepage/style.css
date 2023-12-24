@@ -9,6 +9,8 @@
   flex-direction: horizontal;
   align-items: center;
   margin-top: 100px;
+  position: relative;
+  right: 60px;
 }
 
 .pvai-container {

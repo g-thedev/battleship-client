@@ -93,7 +93,6 @@ const Lobby = () => {
 
     return (
         <div className='lobby'>
-            <h1>Lobby</h1>
             <ul>
                 {Object.values(lobbyUsers).filter(user => user.id !== currentUserId).map((user) => (
                     <li key={user.id}>

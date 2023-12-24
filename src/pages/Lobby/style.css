@@ -9,6 +9,8 @@
 
 .lobby ul {
     padding: unset;
+    position: relative;
+    right: 80px;
 }
 
 .lobby ul li {
@@ -24,4 +26,6 @@
     display: flex;
     flex-direction: column;
     text-align: center;
+    position: relative;
+    right: 80px;
 }

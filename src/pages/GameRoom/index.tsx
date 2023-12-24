@@ -78,7 +78,6 @@ const GameRoom = () => {
 
     return (
         <div className="game-room">
-            <h1>Game Room</h1>
             <div className='status-bar'>
                 {currentPlayerTurn && !gameOver && <p>Your turn!</p>}
                 {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
