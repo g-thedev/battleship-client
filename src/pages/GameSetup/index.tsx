@@ -118,7 +118,7 @@ const GameSetup = () => {
                 socket.off('opponent_reset');
             };
         }
-    }, [handleGameCancelled]);
+    }, [ships, handleGameCancelled]);
 
     const handleReady = () => {
         socket?.emit('player_ready', { playerId: currentUserId, roomId, ships });
