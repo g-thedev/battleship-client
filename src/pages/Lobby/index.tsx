@@ -32,9 +32,13 @@ const Lobby = () => {
             setOpponentId('');
             setMessage(`${data.message}`);
     
-            setTimeout(() => {
-                setMessage('');
-            }, 5000);
+        // Set and cleanup setTimeout directly
+        const messageTimeout = setTimeout(() => {
+            setMessage('');
+        }, 5000);
+
+        // Cleanup
+        return () => clearTimeout(messageTimeout);
         };
 
 
