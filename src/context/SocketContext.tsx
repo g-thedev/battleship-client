@@ -29,6 +29,7 @@ export const SocketProvider: React.FC<ISocketProviderProps> = ({ children }) => 
 
   const updateRoomId = (newRoomId: string) => {
     setRoomId(newRoomId);
+    localStorage.setItem('gameRoomId', newRoomId);
 };
 
   useEffect(() => {
@@ -44,9 +45,17 @@ export const SocketProvider: React.FC<ISocketProviderProps> = ({ children }) => 
       newSocket.on('connect', () => {
         const onLobbyPage = localStorage.getItem('onLobbyPage');
         const userId = localStorage.getItem('user_id');
+        const roomId = localStorage.getItem('gameRoomId');
         if (onLobbyPage && userId) {
             newSocket.emit('join_pvp_lobby', { userId });
         }
+
+        console.log('roomId', roomId);
+        console.log('userId', userId);
+        if (roomId && userId) {
+          console.log('rejoining game room');
+          newSocket.emit('rejoin_game_room', { userId, roomId });
+      }
     });
       
       return () => {

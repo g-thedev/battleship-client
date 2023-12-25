@@ -8,11 +8,13 @@ export interface ConfirmationModalHandle {
 }
 
 const ConfirmationModal = forwardRef<ConfirmationModalHandle>((props, ref) => {
-    const { socket, roomId } = useSocket();
+    const { socket } = useSocket();
     const navigate = useNavigate();
     const location = useLocation();
     const [showModal, setShowModal] = useState(false);
     const currentUserId = localStorage.getItem('user_id');
+
+    const roomId = localStorage.getItem('gameRoomId');
 
     useImperativeHandle(ref, () => ({
         show() {
