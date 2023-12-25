@@ -40,6 +40,14 @@ export const SocketProvider: React.FC<ISocketProviderProps> = ({ children }) => 
       });
 
       setSocket(newSocket);
+
+      newSocket.on('connect', () => {
+        const onLobbyPage = localStorage.getItem('onLobbyPage');
+        const userId = localStorage.getItem('user_id');
+        if (onLobbyPage && userId) {
+            newSocket.emit('join_pvp_lobby', { userId });
+        }
+    });
       
       return () => {
           newSocket.disconnect();

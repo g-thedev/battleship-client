@@ -28,6 +28,8 @@ const Lobby = () => {
     
 
     useEffect(() => {
+        localStorage.setItem('onLobbyPage', 'true');
+
         const onChallengeRejected = (data: { message: any; }) => {
             setOpponentId('');
             setMessage(`${data.message}`);
@@ -43,6 +45,7 @@ const Lobby = () => {
 
 
         if (socket) {
+            socket.emit('request_lobby_update');
 
             socket.on('update_lobby', (users) => {
                 setLobbyUsers(users);
@@ -100,6 +103,7 @@ const Lobby = () => {
                 socket.off('challenge_unavailable', onChallengeRejected);
                 socket.off('connect_error');
                 socket.off('room_ready');
+                localStorage.removeItem('onLobbyPage');
             };
         }
     }, [socket, navigate]);
