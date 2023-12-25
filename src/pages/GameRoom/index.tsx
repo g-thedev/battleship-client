@@ -59,19 +59,16 @@ const GameRoom = () => {
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
             });
-            
 
-        socket.on('game_over', handleGameOver);
+            socket.on('game_over', handleGameOver);
 
-          
+            return () => {
+                if (intervalIdRef.current) {
+                    clearInterval(intervalIdRef.current);
+                }
 
-        return () => {
-            if (intervalIdRef.current) {
-                clearInterval(intervalIdRef.current);
-            }
-
-            socket.off('game_over');
-            socket.off('connect_error');
+                socket.off('game_over');
+                socket.off('connect_error');
         }
         }
     }, [socket, handleGameOver]);

@@ -34,7 +34,7 @@ const Grid: React.FC<GridProps> = ({
   currentLocation,
   gameOver
 }) => {
-  const { socket, roomId } = useSocket();
+  const { socket } = useSocket();
   const currentPlayerId = localStorage.getItem('user_id');
   const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
   const cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -42,6 +42,8 @@ const Grid: React.FC<GridProps> = ({
   const [isFirstClick, setIsFirstClick] = useState(true);
   const [hoverSquare, setHoverSquare] = useState<string | null>(null);
   const [shots, setShots] = useState({ hits: new Set(), misses: new Set() });
+  
+  const roomId = localStorage.getItem('gameRoomId');
   
   const isOverlapping = (coordinates: string[]) => {
     return coordinates.some(coordinate => 
@@ -142,7 +144,6 @@ const Grid: React.FC<GridProps> = ({
     : [];
 
     const handleShipSunk = useCallback((data: SocketData) => {
-      console.log('Ship sunk', data);
       if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
         setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
       }
@@ -172,7 +173,31 @@ const Grid: React.FC<GridProps> = ({
         socket.on('ship_sunk', handleShipSunk);
         socket.on('shot_hit', handleShotHit);
         socket.on('shot_miss', handleShotMiss);
-  
+
+        socket.on('rejoined_game_room', (data) => {
+          if (updateCurrentPlayerTurn) {
+            updateCurrentPlayerTurn(data.currentTurn);
+            setShots({hits: new Set([]), misses: new Set([])})
+            socket.emit('get_current_users_board', { roomId, playerId: currentPlayerId })
+            socket.emit('get_opponents_board', { roomId, playerId: currentPlayerId })
+          }
+      });
+
+      if (currentPlayersBoard && !gameBoard) {
+        // socket.emit('get_current_users_board', { roomId, playerId: currentPlayerId })
+        socket.on('current_users_board', (data) => {
+          console.log('current_users_board', data)
+          setShots({hits: new Set(data.hits), misses: new Set(data.misses)})
+        });
+      }
+
+      if (gameBoard && !currentPlayersBoard) {
+        // socket.emit('get_opponenets_board', { roomId, playerId: currentPlayerId })
+        socket.on('opponents_board', (data) => {
+          console.log('opponents_board', data)
+          setShots({hits: new Set(data.hits), misses: new Set(data.misses)})
+        });
+      }
   
         socket.on('disconnect', (reason) => {
           console.log('Disconnected:', reason);
@@ -184,9 +209,12 @@ const Grid: React.FC<GridProps> = ({
           socket.off('shot_miss', handleShotMiss);
           socket.off('disconnect');
           socket.off('connect_error');
+          socket.off('rejoined_game_room');
+          socket.off('current_users_board');
+          socket.off('opponents_board');
         };
       }
-    }, [socket, handleShipSunk, handleShotHit, handleShotMiss]);
+    }, [socket, handleShipSunk, handleShotHit, handleShotMiss, gameBoard, currentPlayersBoard ]);
 
   return (
     <div className={`grid-container${currentPlayersBoard ? " scale-down" : ""}`}>
