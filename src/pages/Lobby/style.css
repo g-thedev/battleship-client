@@ -21,6 +21,10 @@
     margin-right: 10px;
 }
 
+input:disabled + label {
+    cursor: not-allowed;
+}
+
 .confirmation {
     width: 250px;
     display: flex;

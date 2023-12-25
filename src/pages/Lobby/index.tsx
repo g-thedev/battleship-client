@@ -234,32 +234,37 @@ const Lobby = () => {
         setOpponentId('');
     };
 
+    const availableUsers = Object.values(lobbyUsers)
+        .filter(user => user.id !== currentUserId && !user.inPendingChallenge);
+
+    const areUsersAvailable = availableUsers.length > 0;
+
     return (
         <div className='lobby'>
-            <ul>
-                <div className='status-bar'>
-                    {message && <p>{message}</p>}
-                    {showCountdown && (
-                <p>Challenge expires in {countDown} seconds</p>
-            )}
-                </div>
-                {Object.values(lobbyUsers)
-                    .filter(user => user.id !== currentUserId && !user.inPendingChallenge) 
-                    .map((user) => (
+            <div className='status-bar'>
+                {message && <p>{message}</p>}
+                {showCountdown && (<p>Challenge expires in {countDown} seconds</p>)}
+            </div>
+            {areUsersAvailable ? (
+                <ul>
+                    {availableUsers.map((user) => (
                         <li key={user.id}>
                             <input
-                                type='radio'
+                                type="radio"
                                 id={user.id}
-                                name='userSelection'
+                                name="userSelection"
                                 value={user.id}
                                 checked={opponentId === user.id}
                                 onChange={() => handleUserSelection(user.id)}
+                                disabled={!!challenger.challengerUserId || !!opponentId}
                             />
                             <label htmlFor={user.id}>{user.username}</label>
                         </li>
-                    ))
-                }
+                    ))}
                 </ul>
+            ) : (
+                <p>No users available</p>
+            )}
             {showDisconnectedMessage && (
                 <p>Selected user has been disconnected!</p>
             )}
