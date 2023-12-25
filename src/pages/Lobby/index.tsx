@@ -71,6 +71,7 @@ const Lobby = () => {
                 setOpponentId('');
                 setIsChallenger(false);
                 setChallenger({ challengerUserId: '', challengerUsername: '' });
+                setCountDown(30);
             
                 // Clear the message after 5 seconds
                 const messageTimeout = setTimeout(() => {
@@ -229,6 +230,7 @@ const Lobby = () => {
                 socket.emit('cancel_challenge', { challengerUserId: currentUserId, challengedUserId: opponentId });
                 setIsChallenger(false);
                 setShowCountdown(false);
+                setCountDown(30);
             }
         }
         setOpponentId('');
