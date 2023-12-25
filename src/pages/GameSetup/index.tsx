@@ -92,6 +92,7 @@ const GameSetup = () => {
             );
 
             socket.on('all_players_ready', (data) => {
+                sessionStorage.setItem('isFirstTransition', 'true');
                 const currentPlayerTurn = data.currentPlayerTurn
                 navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn} });
             });
