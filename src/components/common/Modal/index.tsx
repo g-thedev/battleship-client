@@ -30,6 +30,7 @@ const ConfirmationModal = forwardRef<ConfirmationModalHandle>((props, ref) => {
         socket?.emit('leave_game', {roomId, playerId: currentUserId, currentRoom: location.pathname });
         navigate('/');
         setShowModal(false);
+        localStorage.removeItem('gameRoomId');
     };
 
     const handleCancel = () => {
