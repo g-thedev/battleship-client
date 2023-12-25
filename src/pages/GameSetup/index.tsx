@@ -71,6 +71,7 @@ const GameSetup = () => {
             setCountdown((prevCountdown) => {
                 if (prevCountdown === 1) {
                     clearInterval(intervalIdRef.current as number);
+                    localStorage.removeItem('gameRoomId');
                     navigate('/');
                 }
                 return prevCountdown - 1;
