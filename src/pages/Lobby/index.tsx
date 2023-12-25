@@ -33,6 +33,9 @@ const Lobby = () => {
         const onChallengeRejected = (data: { message: any; }) => {
             setOpponentId('');
             setMessage(`${data.message}`);
+            setShowCountdown(false);
+            setCountDown(30);
+            setIsChallenger(false);
     
         // Set and cleanup setTimeout directly
         const messageTimeout = setTimeout(() => {
@@ -215,6 +218,8 @@ const Lobby = () => {
         if (challenger && socket) {
             challenger && setChallenger({ challengerUserId: '', challengerUsername: '' });
             socket.emit('reject_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
+            setShowCountdown(false);
+            setCountDown(30);
         }
     }
 
