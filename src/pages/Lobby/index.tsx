@@ -59,6 +59,22 @@ const Lobby = () => {
                 console.log('Challenge accepted:', data);
             });
 
+            socket.on('challenge_canceled', (data) => {
+                setMessage(`${data.message}`);
+                setShowCountdown(false);
+                setOpponentId('');
+                setIsChallenger(false);
+                setChallenger({ challengerUserId: '', challengerUsername: '' });
+            
+                // Clear the message after 5 seconds
+                const messageTimeout = setTimeout(() => {
+                    setMessage('');
+                }, 5000);
+            
+                // Cleanup
+                return () => clearTimeout(messageTimeout);
+            });
+
             socket.on('challenge_rejected', onChallengeRejected);
 
             socket.on('challenge_unavailable', onChallengeRejected);
@@ -79,6 +95,7 @@ const Lobby = () => {
                 socket.off('update_lobby');
                 socket.off('challenge_received');
                 socket.off('challenge_accepted');
+                socket.off('challenge_canceled');
                 socket.off('challenge_rejected', onChallengeRejected);
                 socket.off('challenge_unavailable', onChallengeRejected);
                 socket.off('connect_error');
@@ -102,55 +119,55 @@ const Lobby = () => {
         }
     };
 
-// Countdown useEffect for the challenger
-useEffect(() => {
-    let timer: number;
-    if (isChallenger) {
-        setShowCountdown(true);
-        setCountDown(30); // Reset countdown to 30 seconds
-        timer = setInterval(() => {
-            setCountDown((prevCount) => {
-                if (prevCount <= 1) {
-                    clearInterval(timer); // Clear the interval timer
-                    setShowCountdown(false); // Hide the countdown message
-                    setIsChallenger(false); // Reset challenger status
-                    return 0; // Set countdown to 0 and stop
-                }
-                return prevCount - 1;
-            });
-        }, 1000);
-    }
+    // Countdown useEffect for the challenger
+    useEffect(() => {
+        let timer: number;
+        if (isChallenger) {
+            setShowCountdown(true);
+            setCountDown(30); // Reset countdown to 30 seconds
+            timer = setInterval(() => {
+                setCountDown((prevCount) => {
+                    if (prevCount <= 1) {
+                        clearInterval(timer); // Clear the interval timer
+                        setShowCountdown(false); // Hide the countdown message
+                        setIsChallenger(false); // Reset challenger status
+                        return 0; // Set countdown to 0 and stop
+                    }
+                    return prevCount - 1;
+                });
+            }, 1000);
+        }
 
-    // Cleanup function for challenger
-    return () => {
-        clearInterval(timer);
-    };
-}, [isChallenger]);
+        // Cleanup function for challenger
+        return () => {
+            clearInterval(timer);
+        };
+    }, [isChallenger]);
 
-// Countdown useEffect for the challenged
-useEffect(() => {
-    let timer: number;
-    if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId && !isChallenger) {
-        setShowCountdown(true);
-        setCountDown(30); // Reset countdown to 30 seconds
-        timer = setInterval(() => {
-            setCountDown((prevCount) => {
-                if (prevCount <= 1) {
-                    clearInterval(timer); // Clear the interval timer
-                    setShowCountdown(false); // Hide the countdown message
-                    handleAutoRejectChallenge(); // Auto reject challenge
-                    return 0; // Set countdown to 0 and stop
-                }
-                return prevCount - 1;
-            });
-        }, 1000);
-    }
+    // Countdown useEffect for the challenged
+    useEffect(() => {
+        let timer: number;
+        if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId && !isChallenger) {
+            setShowCountdown(true);
+            setCountDown(30); // Reset countdown to 30 seconds
+            timer = setInterval(() => {
+                setCountDown((prevCount) => {
+                    if (prevCount <= 1) {
+                        clearInterval(timer); // Clear the interval timer
+                        setShowCountdown(false); // Hide the countdown message
+                        handleAutoRejectChallenge(); // Auto reject challenge
+                        return 0; // Set countdown to 0 and stop
+                    }
+                    return prevCount - 1;
+                });
+            }, 1000);
+        }
 
-    // Cleanup function for challenged
-    return () => {
-        clearInterval(timer);
-    };
-}, [challenger.challengerUserId, currentUserId]);
+        // Cleanup function for challenged
+        return () => {
+            clearInterval(timer);
+        };
+    }, [challenger.challengerUserId, currentUserId]);
 
 
     // TODO - Add a useEffect hook to handle the user returning to the lobby
@@ -197,6 +214,17 @@ useEffect(() => {
         }
     }
 
+    const handleCancelChallenge = () => {
+        if (opponentId && socket) {
+            if (isChallenger && showCountdown) {
+                socket.emit('cancel_challenge', { challengerUserId: currentUserId, challengedUserId: opponentId });
+                setIsChallenger(false);
+                setShowCountdown(false);
+            }
+        }
+        setOpponentId('');
+    };
+
     return (
         <div className='lobby'>
             <ul>
@@ -237,7 +265,7 @@ useEffect(() => {
                 <div className='confirmation'>
                     <p>Challenge {lobbyUsers[opponentId].username}?</p>
                     <button onClick={handleChallenge}>Confirm</button>
-                    <button onClick={() => setOpponentId('')}>Cancel</button>
+                    <button onClick={handleCancelChallenge}>Cancel</button>
                 </div>
             )}
         </div>
