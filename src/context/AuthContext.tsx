@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         const accessToken = localStorage.getItem('accessToken');
         const refreshToken = localStorage.getItem('refreshToken');
     
-        if (accessToken && getSecondsUntilExpiry(accessToken) <= 120) { 
+        if (accessToken && getSecondsUntilExpiry(accessToken) <= 1800) { 
             if (refreshToken && !isTokenExpired(refreshToken)) {
                 try {
                     const refreshed = await callRefreshToken();
@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         console.log('Setting interval');
         const intervalId = setInterval(() => {
             checkTokenAndRefresh();
-        }, (13 * 60 * 1000)); 
+        }, (120 * 60 * 1000)); 
 
         return () => {
             console.log('Interval cleared');
