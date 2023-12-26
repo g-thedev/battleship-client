@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import './style.css';
@@ -6,6 +6,7 @@ import './style.css';
 
 const Lobby = () => {
     const navigate = useNavigate();
+    const intervalIdRef = useRef<number | null>(null);
     const { socket, updateRoomId } = useSocket();
     
     const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
@@ -19,14 +20,15 @@ const Lobby = () => {
     const [message, setMessage] = useState<string>('');
 
     const [countDown, setCountDown] = useState(30);
+    const [redirectCountDown, setRedirectCountDown] = useState(5);
     const [showCountdown, setShowCountdown] = useState(false);
+    const [showRedirectCountdown, setShowRedirectCountdown] = useState(false);
 
-    
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
 
     const [isConfirmationButtonDisabled, setConfirmationIsButtonDisabled] = useState(false);
-    
+
 
     useEffect(() => {
         localStorage.setItem('onLobbyPage', 'true');
@@ -37,6 +39,8 @@ const Lobby = () => {
             setShowCountdown(false);
             setCountDown(30);
             setIsChallenger(false);
+
+            setConfirmationIsButtonDisabled(false);
     
         const messageTimeout = setTimeout(() => {
             setMessage('');
@@ -91,7 +95,21 @@ const Lobby = () => {
                 if (updateRoomId) {
                     updateRoomId(data.roomId);
                 }
-                navigate(`/game-setup?roomId=${data.roomId}`);
+                
+                setShowCountdown(false);
+                setCountDown(30);
+                setShowRedirectCountdown(true)
+
+                setRedirectCountDown(5);
+                intervalIdRef.current = window.setInterval(() => {
+                    setRedirectCountDown((prevCountdown) => {
+                        if (prevCountdown === 1) {
+                            clearInterval(intervalIdRef.current as number);
+                            navigate(`/game-setup?roomId=${data.roomId}`);
+                        }
+                        return prevCountdown - 1;
+                    });
+                }, 1000);
             });
     
         
@@ -244,6 +262,7 @@ const Lobby = () => {
             <div className='status-bar'>
                 {message && <p>{message}</p>}
                 {showCountdown && (<p>Challenge expires in {countDown} seconds</p>)}
+                {showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {redirectCountDown} seconds...</p>}
             </div>
             {areUsersAvailable ? (
                 <ul>

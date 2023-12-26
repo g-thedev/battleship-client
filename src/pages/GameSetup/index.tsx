@@ -7,7 +7,7 @@ import './style.css';
 
 interface SocketData {
     message?: string;
-  }
+}
 
 
 const GameSetup = () => {
@@ -15,13 +15,17 @@ const GameSetup = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const intervalIdRef = useRef<number | null>(null);
+    const intervalRedirectIdRef = useRef<number | null>(null);
     const [countdown, setCountdown] = useState(5);
+    const [redirectCountDown, setRedirectCountDown] = useState(5);
     const currentUserId = localStorage.getItem('user_id');
     const [gameCancelled, setGameCancelled] = useState<string>('');
     const [opponentReady, setOpponentReady] = useState<string>('');
     const [opponentReset, setOpponentReset] = useState<boolean>(false);
 
     const [isReadyButtonDisabled, setReadyIsButtonDisabled] = useState(false);
+
+    const [showGameStart, setShowGameStart] = useState<boolean>(false);
 
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
@@ -97,14 +101,24 @@ const GameSetup = () => {
             socket.on('all_players_ready', (data) => {
                 sessionStorage.setItem('isFirstTransition', 'true');
                 const currentPlayerTurn = data.currentPlayerTurn
-                navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn} });
+
+                setShowGameStart(true);
+                setRedirectCountDown(5);
+                intervalRedirectIdRef.current = window.setInterval(() => {
+                    setRedirectCountDown((prevCountdown) => {
+                        if (prevCountdown === 1) {
+                            clearInterval(intervalRedirectIdRef.current as number);
+                            navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn } });
+                        }
+                        return prevCountdown - 1;
+                    });
+                }, 1000);
             });
 
             socket.on('opponent_reset', () => setOpponentReset(true));
 
             socket.on('game_cancelled', handleGameCancelled);
 
-            // Cleanup when component unmounts
             return () => {
                 if (intervalIdRef.current) {
                     clearInterval(intervalIdRef.current);
@@ -151,10 +165,11 @@ const GameSetup = () => {
             </div>
             <div>
                 <div className="status-bar">
-                    {opponentReady && !opponentReset && <p>{opponentReady} is ready!</p>}
+                    {opponentReady && !opponentReset && !showGameStart && <p>{opponentReady} is ready!</p>}
                     {opponentReset && <p>{opponentReady} has reset their ships!</p>}
                     {gameCancelled && <p>{gameCancelled}</p>}
                     {gameCancelled && <p>Redirecting to home page in {countdown} seconds...</p>}
+                    {showGameStart && <p>All players ready! Game starting in {redirectCountDown} seconds...</p>}
                 </div>
                 <Grid
                     setCurrentShip = {setCurrentShip}
