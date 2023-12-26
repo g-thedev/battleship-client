@@ -18,26 +18,34 @@ interface ISocketContext {
 const SocketContext = createContext<ISocketContext>({
   socket: null,
   roomId: null,
-  updateRoomId: () => {}, // Provide a default no-op function
+  updateRoomId: () => {},
 });
 
 
 export const SocketProvider: React.FC<ISocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null); 
-  const {isAuthenticated} = useAuth();
+  const {isAuthenticated, checkTokenAndRefresh} = useAuth();
 
   const updateRoomId = (newRoomId: string) => {
     setRoomId(newRoomId);
     localStorage.setItem('gameRoomId', newRoomId);
-};
+  };
 
-  useEffect(() => {
-    if (isAuthenticated) {
+  const initializeWebSocket = async () => {
+    try {
+      await checkTokenAndRefresh();
+
+      const accessToken = localStorage.getItem('accessToken');
+
+      if (!accessToken) {
+        throw new Error('No valid access token available for WebSocket connection');
+      }
+
       const newSocket = io(SOCKET_BASE_URL, { 
-          auth: {
-              token: localStorage.getItem('accessToken'),
-          },
+        auth: {
+          token: localStorage.getItem('accessToken'),
+        },
       });
 
       setSocket(newSocket);
@@ -46,20 +54,40 @@ export const SocketProvider: React.FC<ISocketProviderProps> = ({ children }) => 
         const onLobbyPage = localStorage.getItem('onLobbyPage');
         const userId = localStorage.getItem('user_id');
         const roomId = localStorage.getItem('gameRoomId');
+        
         if (onLobbyPage && userId) {
             newSocket.emit('join_pvp_lobby', { userId });
         }
 
-        console.log('roomId', roomId);
-        console.log('userId', userId);
         if (roomId && userId) {
-          console.log('rejoining game room');
           newSocket.emit('rejoin_game_room', { userId, roomId });
-      }
-    });
-      
+        }
+      });
+
+      newSocket.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        // Handle WebSocket errors
+      });
+
+      newSocket.on('disconnect', () => {
+        console.log('WebSocket disconnected');
+        // Handle disconnection
+      });
+
+
+    } catch (error) {
+      console.error('Error initializing WebSocket:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      initializeWebSocket();
+
       return () => {
-          newSocket.disconnect();
+        if (socket) {
+          socket.disconnect();
+        }
       };
     }
   }, [isAuthenticated]);
