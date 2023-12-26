@@ -97,9 +97,7 @@ const GameSetup = () => {
                 navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn} });
             });
 
-            socket.on('opponent_reset', (data) => {
-                setOpponentReset(true);
-            });
+            socket.on('opponent_reset', () => setOpponentReset(true));
 
             socket.on('game_cancelled', handleGameCancelled);
 

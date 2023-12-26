@@ -7,7 +7,7 @@ export interface ConfirmationModalHandle {
     show: () => void;
 }
 
-const ConfirmationModal = forwardRef<ConfirmationModalHandle>((props, ref) => {
+const ConfirmationModal = forwardRef<ConfirmationModalHandle>((_, ref) => {
     const { socket } = useSocket();
     const navigate = useNavigate();
     const location = useLocation();
