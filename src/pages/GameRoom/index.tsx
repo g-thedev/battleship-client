@@ -79,15 +79,43 @@ const GameRoom = () => {
 
 
     return (
-        <div className="game-room">
-            <div className='status-bar'>
-                {currentPlayerTurn && !gameOver && <p>Your turn!</p>}
-                {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
-                {gameOver && <p>Redirecting to home page in {countdown} seconds...</p>}
+        <div className='container'>
+            <div className="side-bar">
+                <div className="status-container">
+                    <h2>Player Turn</h2>
+                    <div className="player-status">
+                        <div className="status-light" 
+                            style={{
+                                backgroundColor: currentPlayerTurn ? 'green' : 'red',
+                                opacity: currentPlayerTurn ? 1 : 0.3
+                            }}>
+                        </div>
+                        <p style={{ opacity: currentPlayerTurn ? 1 : 0.3 }}>You</p>
+                    </div>
+                    <div className="player-status">
+                        <div className="status-light" 
+                            style={{
+                                backgroundColor: !currentPlayerTurn ? 'green' : 'red',
+                                opacity: !currentPlayerTurn ? 1 : 0.3
+                            }}>
+                        </div>
+                        <p style={{ opacity: !currentPlayerTurn ? 1 : 0.3 }}>Opponent</p>
+                    </div>
+                </div>
             </div>
-            <Grid gameBoard={true} currentPlayerTurn={currentPlayerTurn} updateCurrentPlayerTurn={updateCurrentPlayerTurn} currentLocation={location.pathname} gameOver={gameOver} />
-            <Grid ships={shipsState} currentPlayersBoard={true} currentPlayerTurn={currentPlayerTurn}/>
+            <div className="game-room">
+                <div className='status-bar'>
+                    {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
+                    {gameOver && <p>Redirecting to home page in {countdown} seconds...</p>}
+                </div>
+                <Grid gameBoard={true} currentPlayerTurn={currentPlayerTurn} updateCurrentPlayerTurn={updateCurrentPlayerTurn} currentLocation={location.pathname} gameOver={gameOver} />
+                <Grid ships={shipsState} currentPlayersBoard={true} currentPlayerTurn={currentPlayerTurn}/>
+            </div>
+            <div className="side-bar">
+
+            </div>
         </div>
+
     );
 };
 
