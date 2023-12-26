@@ -99,6 +99,7 @@ const Lobby = () => {
                 setShowCountdown(false);
                 setCountDown(30);
                 setShowRedirectCountdown(true)
+                setChallenger({ challengerUserId: '', challengerUsername: '' });
 
                 setRedirectCountDown(5);
                 intervalIdRef.current = window.setInterval(() => {
