@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import './style.css';
-// import NodeJS from 'node';
 
 
 const Lobby = () => {
@@ -19,8 +18,8 @@ const Lobby = () => {
 
     const [message, setMessage] = useState<string>('');
 
-    const [countDown, setCountDown] = useState(30); // Countdown state
-    const [showCountdown, setShowCountdown] = useState(false); // State to control countdown display
+    const [countDown, setCountDown] = useState(30);
+    const [showCountdown, setShowCountdown] = useState(false);
 
     
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
@@ -37,12 +36,10 @@ const Lobby = () => {
             setCountDown(30);
             setIsChallenger(false);
     
-        // Set and cleanup setTimeout directly
         const messageTimeout = setTimeout(() => {
             setMessage('');
         }, 5000);
 
-        // Cleanup
         return () => clearTimeout(messageTimeout);
         };
 
@@ -73,12 +70,10 @@ const Lobby = () => {
                 setChallenger({ challengerUserId: '', challengerUsername: '' });
                 setCountDown(30);
             
-                // Clear the message after 5 seconds
                 const messageTimeout = setTimeout(() => {
                     setMessage('');
                 }, 5000);
             
-                // Cleanup
                 return () => clearTimeout(messageTimeout);
             });
 
@@ -97,7 +92,7 @@ const Lobby = () => {
                 navigate(`/game-setup?roomId=${data.roomId}`);
             });
     
-            // Cleanup when component unmounts
+        
             return () => {
                 socket.off('update_lobby');
                 socket.off('challenge_received');
@@ -115,63 +110,62 @@ const Lobby = () => {
     const handleAutoRejectChallenge = () => {
         if (challenger && socket) {
             socket.emit('reject_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
-            setShowCountdown(false); // Hide the countdown
-            setMessage('Challenge auto-rejected due to timeout.'); // Set the timeout message
+            setShowCountdown(false);
+            setMessage('Challenge auto-rejected due to timeout.'); 
     
-            // Use setTimeout to clear the message after 5 seconds
+            
             setTimeout(() => {
-                setMessage(''); // Clear the message
+                setMessage(''); 
             }, 5000);
     
-            setChallenger({ challengerUserId: '', challengerUsername: '' }); // Reset challenger info
+            setChallenger({ challengerUserId: '', challengerUsername: '' }); 
         }
     };
 
-    // Countdown useEffect for the challenger
+   
     useEffect(() => {
         let timer: number;
         if (isChallenger) {
             setShowCountdown(true);
-            setCountDown(30); // Reset countdown to 30 seconds
+            setCountDown(30); 
             timer = setInterval(() => {
                 setCountDown((prevCount) => {
                     if (prevCount <= 1) {
-                        clearInterval(timer); // Clear the interval timer
-                        setShowCountdown(false); // Hide the countdown message
-                        setIsChallenger(false); // Reset challenger status
-                        return 0; // Set countdown to 0 and stop
+                        clearInterval(timer); 
+                        setShowCountdown(false);
+                        setIsChallenger(false); 
+                        return 0; 
                     }
                     return prevCount - 1;
                 });
             }, 1000);
         }
 
-        // Cleanup function for challenger
+
         return () => {
             clearInterval(timer);
         };
     }, [isChallenger]);
 
-    // Countdown useEffect for the challenged
+   
     useEffect(() => {
         let timer: number;
         if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId && !isChallenger) {
             setShowCountdown(true);
-            setCountDown(30); // Reset countdown to 30 seconds
+            setCountDown(30); 
             timer = setInterval(() => {
                 setCountDown((prevCount) => {
                     if (prevCount <= 1) {
-                        clearInterval(timer); // Clear the interval timer
-                        setShowCountdown(false); // Hide the countdown message
-                        handleAutoRejectChallenge(); // Auto reject challenge
-                        return 0; // Set countdown to 0 and stop
+                        clearInterval(timer); 
+                        setShowCountdown(false);
+                        handleAutoRejectChallenge(); 
+                        return 0; 
                     }
                     return prevCount - 1;
                 });
             }, 1000);
         }
 
-        // Cleanup function for challenged
         return () => {
             clearInterval(timer);
         };
