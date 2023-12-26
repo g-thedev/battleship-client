@@ -24,6 +24,8 @@ const Lobby = () => {
     
     const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
     const [userReturned, setUserReturned] = useState<boolean>(false);
+
+    const [isConfirmationButtonDisabled, setConfirmationIsButtonDisabled] = useState(false);
     
 
     useEffect(() => {
@@ -199,6 +201,7 @@ const Lobby = () => {
     const handleChallenge = () => {
         if (opponentId && socket) {
             setIsChallenger(true);
+            setConfirmationIsButtonDisabled(true);
             socket.emit('request_challenge', { challengedUserId: opponentId, challengerUserId: currentUserId });
         }
     };
@@ -225,6 +228,7 @@ const Lobby = () => {
                 setIsChallenger(false);
                 setShowCountdown(false);
                 setCountDown(30);
+                setConfirmationIsButtonDisabled(false);
             }
         }
         setOpponentId('');
@@ -274,7 +278,7 @@ const Lobby = () => {
             {opponentId && lobbyUsers[opponentId] && (
                 <div className='confirmation'>
                     <p>Challenge {lobbyUsers[opponentId].username}?</p>
-                    <button onClick={handleChallenge}>Confirm</button>
+                    <button className='confirm-button' onClick={handleChallenge} disabled={isConfirmationButtonDisabled}>Confirm</button>
                     <button onClick={handleCancelChallenge}>Cancel</button>
                 </div>
             )}

@@ -38,3 +38,8 @@ input:disabled + label {
     height: 90px;
     margin-bottom: 20px;
 }
+
+.confirm-button:disabled {
+    cursor: not-allowed; 
+    opacity: 0.5;
+}

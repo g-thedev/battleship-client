@@ -21,6 +21,8 @@ const GameSetup = () => {
     const [opponentReady, setOpponentReady] = useState<string>('');
     const [opponentReset, setOpponentReset] = useState<boolean>(false);
 
+    const [isReadyButtonDisabled, setReadyIsButtonDisabled] = useState(false);
+
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
         battleship: 4,
@@ -56,6 +58,7 @@ const GameSetup = () => {
     };
 
     const resetShips = () => {
+        setReadyIsButtonDisabled(false);
         setShips(initialShipsState);
         socket?.emit('reset_ships', { playerId: currentUserId, roomId });
     };
@@ -117,6 +120,7 @@ const GameSetup = () => {
     }, [ships, handleGameCancelled]);
 
     const handleReady = () => {
+        setReadyIsButtonDisabled(true);
         socket?.emit('player_ready', { playerId: currentUserId, roomId, ships });
     }
 
@@ -164,7 +168,7 @@ const GameSetup = () => {
                     className='button-ready' 
                     text="Ready" 
                     onClick={handleReady} 
-                    disabled={!Object.values(ships).every(ship => ship.length > 0)}
+                    disabled={!Object.values(ships).every(ship => ship.length > 0) || isReadyButtonDisabled}
                 />
                 <Button 
                     className='button-placed' 
