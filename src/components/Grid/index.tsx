@@ -14,11 +14,13 @@ interface GridProps {
   updateCurrentPlayerTurn?: (currentPlayer: string) => void;
   currentLocation?: string;
   gameOver?: boolean;
+  setShipSunk?: (shipType: string) => void;
 }
 
 interface SocketData {
   square: string;
   currentPlayerTurn: string;
+  ship?: string;
 }
 
 
@@ -32,7 +34,8 @@ const Grid: React.FC<GridProps> = ({
   currentPlayerTurn ,
   updateCurrentPlayerTurn,
   currentLocation,
-  gameOver
+  gameOver,
+  setShipSunk
 }) => {
   const { socket } = useSocket();
   const currentPlayerId = localStorage.getItem('user_id');
@@ -147,8 +150,9 @@ const Grid: React.FC<GridProps> = ({
       if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
         setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
       }
+      setShipSunk && setShipSunk(currentPlayerTurn ? `You sunk the enemy's ${data.ship}!` : `Your ${data.ship} was sunk!`)
       updateCurrentPlayerTurn && updateCurrentPlayerTurn(data.currentPlayerTurn);
-    }, [currentPlayerTurn, gameBoard, currentPlayersBoard, setShots, updateCurrentPlayerTurn]);
+    }, [currentPlayerTurn, gameBoard, currentPlayersBoard, setShots, updateCurrentPlayerTurn, setShipSunk]);
   
     const handleShotHit = useCallback((data: SocketData) => {
       if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {

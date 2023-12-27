@@ -15,12 +15,14 @@ const GameRoom = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const intervalIdRef = useRef<number | null>(null);
+    const intervalSunkIdRef = useRef<number | null>(null);
     const shipsState = location.state.ships;
     const currentUserId = localStorage.getItem('user_id');
     const [currentPlayerTurn, setCurrentPlayerTurn] = useState<boolean>(false);
     const [gameOver, setGameOver] = useState<boolean>(false);
     const [winner, setWinner] = useState<{ username: string; winnerId: string; message?: string }>({ username: '', winnerId: '', message: '' });
     const [countdown, setCountdown] = useState(5);
+    const [shipSunk, setShipSunk] = useState<string>('');
 
 
     const updateCurrentPlayerTurn = (currentPlayer: string) => {
@@ -36,10 +38,10 @@ const GameRoom = () => {
         setGameOver(true);
 
         setCountdown(5);
-        intervalIdRef.current = window.setInterval(() => {
+        intervalSunkIdRef.current = window.setInterval(() => {
             setCountdown((prevCountdown) => {
                 if (prevCountdown === 1) {
-                    clearInterval(intervalIdRef.current as number);
+                    clearInterval(intervalSunkIdRef.current as number);
                     localStorage.removeItem('gameRoomId');
                     navigate('/');
                 }
@@ -57,6 +59,20 @@ const GameRoom = () => {
             sessionStorage.removeItem('isFirstTransition');
         }
     }, []);
+
+    useEffect(() => {
+        if (shipSunk) {
+            intervalIdRef.current = window.setTimeout(() => {
+                setShipSunk('');
+            }, 5000);
+        }
+
+        return () => {
+            if (intervalIdRef.current) {
+                clearTimeout(intervalIdRef.current);
+            }
+        };
+    }, [shipSunk]);
 
     useEffect(() => {
         if (socket) {
@@ -107,8 +123,9 @@ const GameRoom = () => {
                 <div className='status-bar'>
                     {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
                     {gameOver && <p>Redirecting to home page in {countdown} seconds...</p>}
+                    {shipSunk && <p>{shipSunk}</p>}
                 </div>
-                <Grid gameBoard={true} currentPlayerTurn={currentPlayerTurn} updateCurrentPlayerTurn={updateCurrentPlayerTurn} currentLocation={location.pathname} gameOver={gameOver} />
+                <Grid gameBoard={true} currentPlayerTurn={currentPlayerTurn} updateCurrentPlayerTurn={updateCurrentPlayerTurn} currentLocation={location.pathname} gameOver={gameOver} setShipSunk={setShipSunk}/>
                 <Grid ships={shipsState} currentPlayersBoard={true} currentPlayerTurn={currentPlayerTurn}/>
             </div>
             <div className="side-bar">
