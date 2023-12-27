@@ -32,6 +32,12 @@ export const loginUser = async (userData: IUser) => {
         },
         body: JSON.stringify(userData),
     });
+
+    if (response.status === 401) {
+        const error = await response.json();
+        throw new Error(error.message);
+    }
+
     return response.json();
 };
 

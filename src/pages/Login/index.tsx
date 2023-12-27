@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../../services/api';
@@ -9,6 +9,8 @@ const LoginPage: React.FC = () => {
         username: '',
         password: '',
     });
+
+    const [error, setError] = useState<string>('');
 
     const auth = useAuth();
     const navigate = useNavigate(); 
@@ -27,14 +29,28 @@ const LoginPage: React.FC = () => {
             }
 
         } catch (error) {
-            console.error('Login failed', error);
-            // TODO handle display  error
+            if (error instanceof Error) {
+                console.error('Login failed', error);
+                setError('Login failed: ' + error.message);
+            } else {
+                console.error('An unexpected error occurred');
+                setError('An unexpected error occurred');
+            }
         }
     };
+
+    useEffect(() => {
+        if (error) {
+            setTimeout(() => {
+                setError('');
+            }, 5000);
+        }
+    });
 
     return (
         <div className='login-form'>
             <h1>Login</h1>
+            { error && <p>{ error }</p> }
             <input
                 type="text"
                 placeholder="Username"
