@@ -15,7 +15,13 @@ export const registerUser = async (userData: IUser) => {
         },
         body: JSON.stringify(userData),
     });
-    return response.json();
+
+    if (response.status === 409) {
+        const error = await response.json();
+        throw new Error(error.message);
+    }
+
+    return response.json()
 };
 
 export const loginUser = async (userData: IUser) => {

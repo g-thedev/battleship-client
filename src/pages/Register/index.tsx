@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../../services/api';
 import './style.css';
@@ -8,6 +8,8 @@ const RegisterPage: React.FC = () => {
         username: '',
         password: '',
     });
+    const [error, setError] = useState<string>('');
+    const [success, setSuccess] = useState<string>('');
 
     const navigate = useNavigate(); 
 
@@ -21,18 +23,41 @@ const RegisterPage: React.FC = () => {
         try {
             const response = await registerUser(formData);
             if (response.accessToken && response.refreshToken) {
-                navigate('/login');
+                setSuccess('Registration successful. Redirecting to login page...');
             }
             
         } catch (error) {
-            console.error('Registration failed', error);
-            // TODO handle display  error
+            if (error instanceof Error) {
+                console.error('Registration failed', error);
+                setError(error.message);
+            } else {
+                console.error('An unexpected error occurred');
+                setError('An unexpected error occurred');
+            }
         }
     };
+
+    useEffect(() => {
+        if (success) {
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        }
+    });
+
+    useEffect(() => {
+        if (error) {
+            setTimeout(() => {
+                setError('');
+            }, 5000);
+        }
+    });
 
     return (
         <div className='registration-form'>
             <h1>Register</h1>
+            { error && <p>{ error }</p> }
+            { success && <p>{ success }</p> }
             <input
                 type="text"
                 placeholder="Username"
