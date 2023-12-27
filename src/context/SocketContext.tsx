@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
-const SOCKET_BASE_URL = 'ws://localhost:3000';
+const SOCKET_BASE_URL = import.meta.env.VITE_SOCKET_BASE_URL;
 
 interface ISocketProviderProps {
   children: React.ReactNode;
