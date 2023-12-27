@@ -27,7 +27,7 @@ const GameSetup = () => {
 
     const [showGameStart, setShowGameStart] = useState<boolean>(false);
 
-    const [firstPlayer, setFirstPlayer] = useState(false);
+    const [firstPlayer, setFirstPlayer] = useState<string>('');
 
     const [countdownComplete, setCountdownComplete] = useState(false);
 

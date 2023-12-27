@@ -53,9 +53,9 @@ const GameRoom = () => {
     useEffect(() => {
         const isFirstTransition = sessionStorage.getItem('isFirstTransition') === 'true';
         
-        if (isFirstTransition && location.state && location.state.currentPlayerTurn) {
+        if (isFirstTransition && location.state && location.state.firstPlayer) {
             console.log('Only update once when moving from Setup to Room');
-            updateCurrentPlayerTurn(location.state.currentPlayerTurn);
+            updateCurrentPlayerTurn(location.state.firstPlayer);
             sessionStorage.removeItem('isFirstTransition');
         }
     }, []);
