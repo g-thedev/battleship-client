@@ -147,7 +147,6 @@ const Grid: React.FC<GridProps> = ({
     : [];
 
     const handleShipSunk = useCallback((data: SocketData) => {
-      console.log('ship_sunk', data)
       if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
         setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
       }
@@ -156,7 +155,6 @@ const Grid: React.FC<GridProps> = ({
     }, [currentPlayerTurn, gameBoard, currentPlayersBoard, setShots, updateCurrentPlayerTurn, setShipSunk]);
   
     const handleShotHit = useCallback((data: SocketData) => {
-      console.log('shot_hit', data)
       if ((currentPlayerTurn && gameBoard) || (currentPlayersBoard && !currentPlayerTurn)) {
         setShots(prev => ({ hits: new Set(prev.hits).add(data.square), misses: prev.misses }));
       }
