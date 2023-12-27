@@ -27,6 +27,10 @@ const GameSetup = () => {
 
     const [showGameStart, setShowGameStart] = useState<boolean>(false);
 
+    const [firstPlayer, setFirstPlayer] = useState(false);
+
+    const [countdownComplete, setCountdownComplete] = useState(false);
+
     const shipTypes: { [key: string]: number } = {
         carrier: 5,
         battleship: 4,
@@ -100,7 +104,7 @@ const GameSetup = () => {
 
             socket.on('all_players_ready', (data) => {
                 sessionStorage.setItem('isFirstTransition', 'true');
-                const currentPlayerTurn = data.currentPlayerTurn
+                setFirstPlayer(data.currentPlayerTurn)
 
                 setShowGameStart(true);
                 setRedirectCountDown(5);
@@ -108,7 +112,7 @@ const GameSetup = () => {
                     setRedirectCountDown((prevCountdown) => {
                         if (prevCountdown === 1) {
                             clearInterval(intervalRedirectIdRef.current as number);
-                            navigate(`/game-room?roomId=${roomId}`, { state: { ships, currentPlayerTurn } });
+                            setCountdownComplete(true);
                         }
                         return prevCountdown - 1;
                     });
@@ -132,6 +136,16 @@ const GameSetup = () => {
             };
         }
     }, [ships, handleGameCancelled]);
+
+
+    // Manage navigation outside of the useEffect above to prevent
+    // Cannot update a component (`BrowserRouter`) while rendering a different component (`GameSetup`).
+    useEffect(() => {
+        if (countdownComplete && firstPlayer) {
+            const roomId = localStorage.getItem('gameRoomId')
+            navigate(`/game-room?roomId=${roomId}`, { state: { ships, firstPlayer } });
+        }
+    }, [countdownComplete, navigate, firstPlayer]);
 
     const handleReady = () => {
         setReadyIsButtonDisabled(true);

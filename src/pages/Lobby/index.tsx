@@ -29,6 +29,8 @@ const Lobby = () => {
 
     const [isConfirmationButtonDisabled, setConfirmationIsButtonDisabled] = useState(false);
 
+    const [countdownComplete, setCountdownComplete] = useState(false);
+
 
     useEffect(() => {
         localStorage.setItem('onLobbyPage', 'true');
@@ -106,7 +108,7 @@ const Lobby = () => {
                     setRedirectCountDown((prevCountdown) => {
                         if (prevCountdown === 1) {
                             clearInterval(intervalIdRef.current as number);
-                            navigate(`/game-setup?roomId=${data.roomId}`);
+                            setCountdownComplete(true);
                         }
                         return prevCountdown - 1;
                     });
@@ -127,6 +129,15 @@ const Lobby = () => {
             };
         }
     }, [socket, navigate]);
+
+    // Manage navigation outside of the useEffect above to prevent
+    // Cannot update a component (`BrowserRouter`) while rendering a different component (`Lobby`).
+    useEffect(() => {
+        if (countdownComplete) {
+            const roomId = localStorage.getItem('gameRoomId')
+            navigate(`/game-setup?roomId=${roomId}`);
+        }
+    }, [countdownComplete, navigate]);
 
     const handleAutoRejectChallenge = () => {
         if (challenger && socket) {
