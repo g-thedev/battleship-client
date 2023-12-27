@@ -32,6 +32,7 @@ const Lobby = () => {
 
     const [countdownComplete, setCountdownComplete] = useState(false);
 
+    const [hideLobby, setHideLobby] = useState(false);
 
     useEffect(() => {
         localStorage.setItem('onLobbyPage', 'true');
@@ -67,9 +68,7 @@ const Lobby = () => {
                 setChallenger(data);
             });
 
-            socket.on('challenge_accepted', (data) => {
-                console.log('Challenge accepted:', data);
-            });
+            socket.on('challenge_accepted', () => setHideLobby(true));
 
             socket.on('challenge_canceled', (data) => {
                 setMessage(`${data.message}`);
@@ -276,7 +275,7 @@ const Lobby = () => {
                 {showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {redirectCountDown} seconds...</p>}
             </div>
             {areUsersAvailable ? (
-                <ul>
+                <ul className={hideLobby ? `hide` : ''}>
                     {availableUsers.map((user) => (
                         <li key={user.id}>
                             <input
