@@ -34,21 +34,20 @@ const GameRoom = () => {
     };
 
     const handleGameOver = useCallback((data: SocketData) => {
-        // setWinner({ username: data.winner, winnerId: data.winnerId, message: data.message });
-        // setGameOver(true);
+        setWinner({ username: data.winner, winnerId: data.winnerId, message: data.message });
+        setGameOver(true);
 
-        // setCountdown(5);
-        // intervalSunkIdRef.current = window.setInterval(() => {
-        //     setCountdown((prevCountdown) => {
-        //         if (prevCountdown === 1) {
-        //             clearInterval(intervalSunkIdRef.current as number);
-        //             localStorage.removeItem('gameRoomId');
-        //             navigate('/');
-        //         }
-        //         return prevCountdown - 1;
-        //     });
-        // }, 1000);
-        return
+        setCountdown(5);
+        intervalSunkIdRef.current = window.setInterval(() => {
+            setCountdown((prevCountdown) => {
+                if (prevCountdown === 1) {
+                    clearInterval(intervalSunkIdRef.current as number);
+                    localStorage.removeItem('gameRoomId');
+                    // navigate('/');
+                }
+                return prevCountdown - 1;
+            });
+        }, 1000);
     }, [setWinner, setGameOver, navigate]);
 
     useEffect(() => {
