@@ -7,6 +7,7 @@ import './style.css';
 const Lobby = () => {
     const navigate = useNavigate();
     const intervalIdRef = useRef<number | null>(null);
+    const intervalRedirectIdRef = useRef<number | null>(null);
     const { socket, updateRoomId } = useSocket();
     
     const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
@@ -104,10 +105,10 @@ const Lobby = () => {
                 setChallenger({ challengerUserId: '', challengerUsername: '' });
 
                 setRedirectCountDown(5);
-                intervalIdRef.current = window.setInterval(() => {
+                intervalRedirectIdRef.current = window.setInterval(() => {
                     setRedirectCountDown((prevCountdown) => {
                         if (prevCountdown === 1) {
-                            clearInterval(intervalIdRef.current as number);
+                            clearInterval(intervalRedirectIdRef.current as number);
                             setCountdownComplete(true);
                         }
                         return prevCountdown - 1;
@@ -156,14 +157,13 @@ const Lobby = () => {
 
    
     useEffect(() => {
-        let timer: number;
         if (isChallenger) {
             setShowCountdown(true);
             setCountDown(30); 
-            timer = setInterval(() => {
+            intervalIdRef.current = window.setInterval(() => {
                 setCountDown((prevCount) => {
                     if (prevCount <= 1) {
-                        clearInterval(timer); 
+                        clearInterval(intervalIdRef.current as number); 
                         setShowCountdown(false);
                         setIsChallenger(false); 
                         return 0; 
@@ -175,20 +175,19 @@ const Lobby = () => {
 
 
         return () => {
-            clearInterval(timer);
+            clearInterval(intervalIdRef.current as number);
         };
     }, [isChallenger]);
 
    
     useEffect(() => {
-        let timer: number;
         if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId && !isChallenger) {
             setShowCountdown(true);
             setCountDown(30); 
-            timer = setInterval(() => {
+            intervalIdRef.current = window.setInterval(() => {
                 setCountDown((prevCount) => {
                     if (prevCount <= 1) {
-                        clearInterval(timer); 
+                        clearInterval(intervalIdRef.current as number); 
                         setShowCountdown(false);
                         handleAutoRejectChallenge(); 
                         return 0; 
@@ -199,7 +198,7 @@ const Lobby = () => {
         }
 
         return () => {
-            clearInterval(timer);
+            clearInterval(intervalIdRef.current as number);
         };
     }, [challenger.challengerUserId, currentUserId]);
 
