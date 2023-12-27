@@ -43,7 +43,7 @@ const GameRoom = () => {
                 if (prevCountdown === 1) {
                     clearInterval(intervalSunkIdRef.current as number);
                     localStorage.removeItem('gameRoomId');
-                    // navigate('/');
+                    navigate('/');
                 }
                 return prevCountdown - 1;
             });
@@ -119,7 +119,7 @@ const GameRoom = () => {
                     </div>
                 </div>
             </div>
-            <div className="game-room">
+            <div className={`game-room${gameOver ? ' disabled' : ''}`}>
                 <div className='status-bar'>
                     {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
                     {gameOver && <p>Redirecting to home page in {countdown} seconds...</p>}
