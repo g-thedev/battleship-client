@@ -21,3 +21,8 @@
     text-decoration: none;
     color: white;
 }
+
+h1 {
+    width: 420px;
+    padding: 0 10px;
+}
