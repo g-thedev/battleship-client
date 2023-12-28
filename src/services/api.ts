@@ -54,3 +54,21 @@ export const callRefreshToken = async () => {
     return response.json();
 };
 
+export const getUser = async (id: string) => {
+    const accessToken = localStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        },
+    });
+
+    if (response.status === 404) {
+        const error = await response.json();
+        throw new Error(error.message);
+    }
+
+    return response.json();
+}
+
