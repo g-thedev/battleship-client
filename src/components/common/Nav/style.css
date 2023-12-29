@@ -9,11 +9,18 @@
 
 .logo {
     font-size: 24px;
+    width: 185px;
 }
 
 .logo a {
     text-decoration: none;
     color: white;
+}
+
+.nav {
+    min-width: 185px;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .nav a {
@@ -24,5 +31,4 @@
 
 h1 {
     width: 420px;
-    padding: 0 10px;
 }

@@ -269,48 +269,52 @@ const Lobby = () => {
 
     return (
         <div className='lobby'>
-            <div className='status-bar'>
-                {message && <p>{message}</p>}
-                {showCountdown && (<p>Challenge expires in {countDown} seconds</p>)}
-                {showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {redirectCountDown} seconds...</p>}
+            <div className="gutter"></div>
+            <div className="wrapper">
+                <div className='status-bar'>
+                    {message && <p>{message}</p>}
+                    {showCountdown && (<p>Challenge expires in {countDown} seconds</p>)}
+                    {showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {redirectCountDown} seconds...</p>}
+                </div>
+                {areUsersAvailable ? (
+                    <ul className={hideLobby ? `hide` : ''}>
+                        {availableUsers.map((user) => (
+                            <li key={user.id}>
+                                <input
+                                    type="radio"
+                                    id={user.id}
+                                    name="userSelection"
+                                    value={user.id}
+                                    checked={opponentId === user.id}
+                                    onChange={() => handleUserSelection(user.id)}
+                                    disabled={!!challenger.challengerUserId || !!opponentId}
+                                />
+                                <label htmlFor={user.id}>{user.username}</label>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>No users available</p>
+                )}
+                {showDisconnectedMessage && (
+                    <p>Selected user has been disconnected!</p>
+                )}
+                {challenger && challenger.challengerUserId && (
+                    <div className='confirmation'>
+                        <p>{challenger.challengerUsername} has challenged you!</p>
+                        <button onClick={handleAcceptChallenge}>Accept</button>
+                        <button onClick={handleRejectChallenge}>Reject</button>
+                    </div>
+                )}
+                {opponentId && lobbyUsers[opponentId] && (
+                    <div className='confirmation'>
+                        <p>Challenge {lobbyUsers[opponentId].username}?</p>
+                        <button className='confirm-button' onClick={handleChallenge} disabled={isConfirmationButtonDisabled}>Confirm</button>
+                        <button onClick={handleCancelChallenge}>Cancel</button>
+                    </div>
+                )}
             </div>
-            {areUsersAvailable ? (
-                <ul className={hideLobby ? `hide` : ''}>
-                    {availableUsers.map((user) => (
-                        <li key={user.id}>
-                            <input
-                                type="radio"
-                                id={user.id}
-                                name="userSelection"
-                                value={user.id}
-                                checked={opponentId === user.id}
-                                onChange={() => handleUserSelection(user.id)}
-                                disabled={!!challenger.challengerUserId || !!opponentId}
-                            />
-                            <label htmlFor={user.id}>{user.username}</label>
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No users available</p>
-            )}
-            {showDisconnectedMessage && (
-                <p>Selected user has been disconnected!</p>
-            )}
-            {challenger && challenger.challengerUserId && (
-                <div className='confirmation'>
-                    <p>{challenger.challengerUsername} has challenged you!</p>
-                    <button onClick={handleAcceptChallenge}>Accept</button>
-                    <button onClick={handleRejectChallenge}>Reject</button>
-                </div>
-            )}
-            {opponentId && lobbyUsers[opponentId] && (
-                <div className='confirmation'>
-                    <p>Challenge {lobbyUsers[opponentId].username}?</p>
-                    <button className='confirm-button' onClick={handleChallenge} disabled={isConfirmationButtonDisabled}>Confirm</button>
-                    <button onClick={handleCancelChallenge}>Cancel</button>
-                </div>
-            )}
+            <div className="gutter"></div>
         </div>
     );
 };

@@ -1,8 +1,8 @@
 .lobby {
     color: white;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    /* align-items: center; */
     height: 100vh;
     max-width: 1200px;
     margin: 0 auto;
@@ -11,7 +11,21 @@
 .lobby ul {
     padding: unset;
     position: relative;
-    width: 200px;
+    width: 100%;
+    text-align: center;
+}
+
+.gutter {
+    min-width: 185px
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-between; */
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
 }
 
 .lobby ul li {
