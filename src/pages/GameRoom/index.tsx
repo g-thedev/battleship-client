@@ -123,7 +123,7 @@ const GameRoom = () => {
                 <div className='status-bar'>
                     {gameOver && <h2>{winner.message? winner.message: ''}{currentUserId === winner.winnerId? 'You win!' : `${winner.username} wins!`}</h2>}
                     {gameOver && <p>Redirecting to home page in {countdown} seconds...</p>}
-                    {shipSunk && <p>{shipSunk}</p>}
+                    {shipSunk && !gameOver && <p>{shipSunk}</p>}
                 </div>
                 <Grid gameBoard={true} currentPlayerTurn={currentPlayerTurn} updateCurrentPlayerTurn={updateCurrentPlayerTurn} currentLocation={location.pathname} gameOver={gameOver} setShipSunk={setShipSunk}/>
                 <Grid ships={shipsState} currentPlayersBoard={true} currentPlayerTurn={currentPlayerTurn}/>
