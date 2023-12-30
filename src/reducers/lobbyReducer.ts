@@ -16,6 +16,8 @@ interface ILobbyState {
     isConfirmationButtonDisabled: boolean;
     countdownComplete: boolean;
     hideLobby: boolean;
+    lastActionType: string;
+    roomId: string;
 }
 
 
@@ -33,7 +35,13 @@ type LobbyAction =
     | { type: 'SET_USER_RETURNED'; payload: boolean }
     | { type: 'SET_IS_CONFIRMATION_BUTTON_DISABLED'; payload: boolean }
     | { type: 'SET_COUNTDOWN_COMPLETE'; payload: boolean }
-    | { type: 'SET_HIDE_LOBBY'; payload: boolean };
+    | { type: 'SET_HIDE_LOBBY'; payload: boolean }
+    | { type: 'AUTO_REJECT_CHALLENGE' }
+    | { type: 'CLEAR_MESSAGE' }
+    | { type: 'CANCEL_CHALLENGE'; payload: any } 
+    | { type: 'REJECT_CHALLENGE'; payload: { message: string } }
+    | { type: 'UPDATE_ROOM_ID'; payload: string }
+    | { type: 'DECREMENT_COUNTDOWN' };
 
 
 export const initialState: ILobbyState = {
@@ -51,6 +59,8 @@ export const initialState: ILobbyState = {
     isConfirmationButtonDisabled: false,
     countdownComplete: false,
     hideLobby: false,
+    lastActionType: '',
+    roomId: '',
 };
 
 
@@ -97,6 +107,43 @@ export function lobbyReducer(state: ILobbyState, action: LobbyAction): ILobbySta
         
         case 'SET_HIDE_LOBBY':
             return { ...state, hideLobby: action.payload };
+
+        case 'AUTO_REJECT_CHALLENGE':
+            return {
+                ...state,
+                showCountdown: false,
+                message: 'Challenge auto-rejected due to timeout.',
+                challenger: { challengerUserId: '', challengerUsername: '' },
+            };
+
+        case 'CLEAR_MESSAGE':
+            return {
+                ...state,
+                message: '',
+            };
+        
+        case 'CANCEL_CHALLENGE':
+        case 'REJECT_CHALLENGE':
+            return {
+                ...state,
+                showCountdown: false,
+                opponentId: '',
+                isChallenger: false,
+                challenger: { challengerUserId: '', challengerUsername: '' },
+                countDown: 30,
+                message: action.payload.message,
+                lastActionType: action.type,
+            };
+
+        case 'UPDATE_ROOM_ID':
+            return {
+                ...state,
+                roomId: action.payload,
+            };
+            
+        case 'DECREMENT_COUNTDOWN':
+            const newCountDown = state.countDown > 0 ? state.countDown - 1 : 0;
+            return { ...state, countDown: newCountDown };
 
         default:
             return state;
