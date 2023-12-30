@@ -1,131 +1,88 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useReducer } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSocket } from '../../context/SocketContext';
+import useSocket from '../../hooks/useSocket';
+import { useSocket as socketContext } from '../../context/SocketContext';
 import { lobbyReducer, initialState } from '../../reducers/lobbyReducer'
 import './style.css';
 
 
 const Lobby = () => {
     const navigate = useNavigate();
-    const intervalIdRef = useRef<number | null>(null);
-    const intervalRedirectIdRef = useRef<number | null>(null);
-    const { socket, updateRoomId } = useSocket();
+    const { socket } = socketContext();
     
-    const [lobbyUsers, setLobbyUsers] = useState<Record<string, any>>({});
-
     const currentUserId = localStorage.getItem('user_id');
 
-    const [opponentId, setOpponentId] = useState<string>('');
-    const [challenger, setChallenger] = useState<{ challengerUserId: string, challengerUsername: string }>({ challengerUserId: '', challengerUsername: '' });
-    const [isChallenger, setIsChallenger] = useState(false);
+    const [state, dispatch] = useReducer(lobbyReducer, initialState);
 
-    const [message, setMessage] = useState<string>('');
+    const socketEventHandlers = {
+        'update_lobby': (users: Record<string, any>) => dispatch({ type: 'SET_LOBBY_USERS', payload: { users } }),
+        'challenge_received': (data: any) => dispatch({ type: 'SET_CHALLENGER', payload: data }),
+        'challenge_accepted': () => dispatch({ type: 'SET_HIDE_LOBBY', payload: true }),
+        'challenge_canceled': (data: any) => dispatch({ type: 'CANCEL_CHALLENGE', payload: data }),
+        'challenge_rejected': (data: any) => dispatch({ type: 'REJECT_CHALLENGE', payload: data }),
+        'challenge_unavailable': (data: any) => dispatch({ type: 'REJECT_CHALLENGE', payload: data }),
+        'connect_error': (error: any) => console.error('Connection error:', error),
+        'room_ready': (data: any) => {
+            dispatch({ type: 'UPDATE_ROOM_ID', payload: data.roomId });
+            dispatch({ type: 'SET_SHOW_REDIRECT_COUNTDOWN', payload: true });
+            dispatch({ type: 'SET_REDIRECT_COUNTDOWN', payload: 5 });
+        },
 
-    const [countDown, setCountDown] = useState(30);
-    const [redirectCountDown, setRedirectCountDown] = useState(5);
-    const [showCountdown, setShowCountdown] = useState(false);
-    const [showRedirectCountdown, setShowRedirectCountdown] = useState(false);
+    };
 
-    const [showDisconnectedMessage, setShowDisconnectedMessage] = useState<boolean>(false);
-    const [userReturned, setUserReturned] = useState<boolean>(false);
+    useEffect(() => {
+        let messageTimeout: NodeJS.Timeout;
+    
+        if (state.message !== '') {
+            messageTimeout = setTimeout(() => {
+                if (state.lastActionType === 'CANCEL_CHALLENGE') {
+                    dispatch({ type: 'CANCEL_CHALLENGE', payload: { message: '' } });
+                } else if (state.lastActionType === 'REJECT_CHALLENGE') {
+                    dispatch({ type: 'REJECT_CHALLENGE', payload: { message: '' } });
+                }
+            }, 5000);
+        }
+    
+        return () => clearTimeout(messageTimeout);
+    }, [state.message, state.lastActionType]);
 
-    const [isConfirmationButtonDisabled, setConfirmationIsButtonDisabled] = useState(false);
+    useEffect(() => {
+        let redirectInterval: NodeJS.Timeout;
 
-    const [countdownComplete, setCountdownComplete] = useState(false);
+        if (state.showRedirectCountdown && state.redirectCountDown > 0) {
+            redirectInterval = setInterval(() => {
+                dispatch({ type: 'SET_REDIRECT_COUNTDOWN', payload: state.redirectCountDown - 1 });
+            }, 1000);
+        } else if (state.redirectCountDown === 0) {
+            dispatch({ type: 'SET_COUNTDOWN_COMPLETE', payload: true });
+        }
 
-    const [hideLobby, setHideLobby] = useState(false);
+        return () => clearInterval(redirectInterval);
+    }, [state.showRedirectCountdown, state.redirectCountDown, dispatch]);
+
+    useEffect(() => {
+        if (state.roomId) {
+            localStorage.setItem('gameRoomId', state.roomId);
+        }
+    }, [state.roomId]);
+
+    useEffect(() => {
+        if (state.countdownComplete) {
+            const roomId = localStorage.getItem('gameRoomId');
+            navigate(`/game-setup?roomId=${roomId}`);
+        }
+    }, [state.countdownComplete, navigate]);
+    
+
+    useSocket(socketEventHandlers);
 
     useEffect(() => {
         localStorage.setItem('onLobbyPage', 'true');
 
-        const onChallengeRejected = (data: { message: any; }) => {
-            setOpponentId('');
-            setMessage(`${data.message}`);
-            setShowCountdown(false);
-            setCountDown(30);
-            setIsChallenger(false);
-
-            setConfirmationIsButtonDisabled(false);
-    
-        const messageTimeout = setTimeout(() => {
-            setMessage('');
-        }, 5000);
-
-        return () => clearTimeout(messageTimeout);
-        };
-
-
         if (socket) {
             socket.emit('request_lobby_update');
 
-            socket.on('update_lobby', (users) => {
-                setLobbyUsers(users);
-                if (opponentId && users[opponentId].inPendingChallenge) {
-                    setOpponentId('');
-                }
-            });
-
-            socket.on('challenge_received', (data) => {
-                setChallenger(data);
-            });
-
-            socket.on('challenge_accepted', () => setHideLobby(true));
-
-            socket.on('challenge_canceled', (data) => {
-                setMessage(`${data.message}`);
-                setShowCountdown(false);
-                setOpponentId('');
-                setIsChallenger(false);
-                setChallenger({ challengerUserId: '', challengerUsername: '' });
-                setCountDown(30);
-            
-                const messageTimeout = setTimeout(() => {
-                    setMessage('');
-                }, 5000);
-            
-                return () => clearTimeout(messageTimeout);
-            });
-
-            socket.on('challenge_rejected', onChallengeRejected);
-
-            socket.on('challenge_unavailable', onChallengeRejected);
-
-            socket.on('connect_error', (error) => {
-                console.error('Connection error:', error);
-            });
-
-            socket.on('room_ready', (data) => {
-                if (updateRoomId) {
-                    updateRoomId(data.roomId);
-                }
-                
-                setShowCountdown(false);
-                setCountDown(30);
-                setShowRedirectCountdown(true)
-                setChallenger({ challengerUserId: '', challengerUsername: '' });
-
-                setRedirectCountDown(5);
-                intervalRedirectIdRef.current = window.setInterval(() => {
-                    setRedirectCountDown((prevCountdown) => {
-                        if (prevCountdown === 1) {
-                            clearInterval(intervalRedirectIdRef.current as number);
-                            setCountdownComplete(true);
-                        }
-                        return prevCountdown - 1;
-                    });
-                }, 1000);
-            });
-    
-        
             return () => {
-                socket.off('update_lobby');
-                socket.off('challenge_received');
-                socket.off('challenge_accepted');
-                socket.off('challenge_canceled');
-                socket.off('challenge_rejected', onChallengeRejected);
-                socket.off('challenge_unavailable', onChallengeRejected);
-                socket.off('connect_error');
-                socket.off('room_ready');
                 localStorage.removeItem('onLobbyPage');
             };
         }
@@ -133,137 +90,140 @@ const Lobby = () => {
 
     // Manage navigation outside of the useEffect above to prevent
     // Cannot update a component (`BrowserRouter`) while rendering a different component (`Lobby`).
-    useEffect(() => {
-        if (countdownComplete) {
-            const roomId = localStorage.getItem('gameRoomId')
-            navigate(`/game-setup?roomId=${roomId}`);
-        }
-    }, [countdownComplete, navigate]);
 
     const handleAutoRejectChallenge = () => {
-        if (challenger && socket) {
-            socket.emit('reject_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
-            setShowCountdown(false);
-            setMessage('Challenge auto-rejected due to timeout.'); 
+        if (state.challenger && socket) {
+            socket.emit('reject_challenge', { challengerUserId: state.challenger['challengerUserId'], challengedUserId: currentUserId });
+            dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+            dispatch({ type: 'SET_MESSAGE', payload: 'Challenge auto-rejected due to timeout.' });
     
             
             setTimeout(() => {
-                setMessage(''); 
+                dispatch({ type: 'SET_MESSAGE', payload: '' }); 
             }, 5000);
     
-            setChallenger({ challengerUserId: '', challengerUsername: '' }); 
+            dispatch({ type: 'SET_CHALLENGER', payload: { challengerUserId: '', challengerUsername: '' } });
         }
     };
 
    
     useEffect(() => {
-        if (isChallenger) {
-            setShowCountdown(true);
-            setCountDown(30); 
-            intervalIdRef.current = window.setInterval(() => {
-                setCountDown((prevCount) => {
-                    if (prevCount <= 1) {
-                        clearInterval(intervalIdRef.current as number); 
-                        setShowCountdown(false);
-                        setIsChallenger(false); 
-                        return 0; 
-                    }
-                    return prevCount - 1;
-                });
+        let countdownInterval: NodeJS.Timeout;
+    
+        if (state.isChallenger) {
+            dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: true });
+            dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
+    
+            countdownInterval = setInterval(() => {
+                dispatch({ type: 'DECREMENT_COUNTDOWN' });
+    
+                if (state.countDown <= 1) {
+                    clearInterval(countdownInterval);
+                    dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+                    dispatch({ type: 'SET_IS_CHALLENGER', payload: false });
+                }
             }, 1000);
         }
-
-
+    
         return () => {
-            clearInterval(intervalIdRef.current as number);
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
         };
-    }, [isChallenger]);
-
+    }, [state.isChallenger, state.countDown]);
+    
    
     useEffect(() => {
-        if (challenger.challengerUserId && currentUserId !== challenger.challengerUserId && !isChallenger) {
-            setShowCountdown(true);
-            setCountDown(30); 
-            intervalIdRef.current = window.setInterval(() => {
-                setCountDown((prevCount) => {
-                    if (prevCount <= 1) {
-                        clearInterval(intervalIdRef.current as number); 
-                        setShowCountdown(false);
-                        handleAutoRejectChallenge(); 
-                        return 0; 
-                    }
-                    return prevCount - 1;
-                });
+        let countdownInterval : NodeJS.Timeout;
+    
+        if (state.challenger.challengerUserId && currentUserId !== state.challenger.challengerUserId && !state.isChallenger) {
+            dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: true });
+            dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
+    
+            countdownInterval = setInterval(() => {
+                dispatch({ type: 'DECREMENT_COUNTDOWN' });
+    
+                if (state.countDown <= 1) {
+                    clearInterval(countdownInterval);
+                    dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+                    handleAutoRejectChallenge();
+                }
             }, 1000);
         }
-
+    
         return () => {
-            clearInterval(intervalIdRef.current as number);
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
         };
-    }, [challenger.challengerUserId, currentUserId]);
+    }, [state.challenger.challengerUserId, currentUserId, state.isChallenger, state.countDown, dispatch]);
+    
 
 
     // TODO - Add a useEffect hook to handle the user returning to the lobby
     //       after being disconnected due to reloading the page or closing the tab
 
-    useEffect(() => {
-        if (opponentId && !lobbyUsers[opponentId]) {
-            setOpponentId('');
-            setTimeout(() => {
-                if (!userReturned) {
-                    setShowDisconnectedMessage(true);
-                }
-            }, 5000);
-            setTimeout(() => {
+    // useEffect(() => {
+    //     if (opponentId && !lobbyUsers[opponentId]) {
+    //         setOpponentId('');
+    //         setTimeout(() => {
+    //             if (!userReturned) {
+    //                 setShowDisconnectedMessage(true);
+    //             }
+    //         }, 5000);
+    //         setTimeout(() => {
 
-                setShowDisconnectedMessage(false);
+    //             setShowDisconnectedMessage(false);
 
-            }, 10000);
-        }
-    }, [opponentId, lobbyUsers, userReturned]);
+    //         }, 10000);
+    //     }
+    // }, [opponentId, lobbyUsers, userReturned]);
 
     const handleUserSelection = (userId: string) => {
-        setOpponentId(userId);
-        setUserReturned(false);
+        dispatch({ type: 'SET_OPPONENT_ID', payload: userId });
+        dispatch({ type: 'SET_USER_RETURNED', payload: false });
     };
-
+    
     const handleChallenge = () => {
-        if (opponentId && socket) {
-            setIsChallenger(true);
-            setConfirmationIsButtonDisabled(true);
-            socket.emit('request_challenge', { challengedUserId: opponentId, challengerUserId: currentUserId });
+        if (state.opponentId && socket) {
+            dispatch({ type: 'SET_IS_CHALLENGER', payload: true });
+            dispatch({ type: 'SET_IS_CONFIRMATION_BUTTON_DISABLED', payload: true });
+            socket.emit('request_challenge', { challengedUserId: state.opponentId, challengerUserId: currentUserId });
         }
     };
+    
 
     const handleAcceptChallenge = () => {
-        if (challenger && socket) {
-            socket.emit('accept_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
+        if (state.challenger && socket) {
+            socket.emit('accept_challenge', { challengerUserId: state.challenger.challengerUserId, challengedUserId: currentUserId });
         }
-    }
+    };
+    
 
     const handleRejectChallenge = () => {
-        if (challenger && socket) {
-            challenger && setChallenger({ challengerUserId: '', challengerUsername: '' });
-            socket.emit('reject_challenge', { challengerUserId: challenger['challengerUserId'], challengedUserId: currentUserId });
-            setShowCountdown(false);
-            setCountDown(30);
+        if (state.challenger && socket) {
+            dispatch({ type: 'SET_CHALLENGER', payload: { challengerUserId: '', challengerUsername: '' } });
+            socket.emit('reject_challenge', { challengerUserId: state.challenger.challengerUserId, challengedUserId: currentUserId });
+            dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+            dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
         }
-    }
+    };
+    
 
     const handleCancelChallenge = () => {
-        if (opponentId && socket) {
-            if (isChallenger && showCountdown) {
-                socket.emit('cancel_challenge', { challengerUserId: currentUserId, challengedUserId: opponentId });
-                setIsChallenger(false);
-                setShowCountdown(false);
-                setCountDown(30);
-                setConfirmationIsButtonDisabled(false);
+        if (state.opponentId && socket) {
+            if (state.isChallenger && state.showCountdown) {
+                socket.emit('cancel_challenge', { challengerUserId: currentUserId, challengedUserId: state.opponentId });
+                dispatch({ type: 'SET_IS_CHALLENGER', payload: false });
+                dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+                dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
+                dispatch({ type: 'SET_IS_CONFIRMATION_BUTTON_DISABLED', payload: false });
             }
         }
-        setOpponentId('');
-    };
+        dispatch({ type: 'SET_OPPONENT_ID', payload: '' });
+    };    
 
-    const availableUsers = Object.values(lobbyUsers)
+    let availableUsers = Object.values(state.lobbyUsers)
         .filter(user => user.id !== currentUserId && !user.inPendingChallenge);
 
     const areUsersAvailable = availableUsers.length > 0;
@@ -273,12 +233,15 @@ const Lobby = () => {
             <div className="gutter"></div>
             <div className="wrapper">
                 <div className='status-bar'>
-                    {message && <p>{message}</p>}
-                    {showCountdown && (<p>Challenge expires in {countDown} seconds</p>)}
-                    {showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {redirectCountDown} seconds...</p>}
+                    {state.message && <p>{state.message}</p>}
+                    {state.showCountdown && (<p>Challenge expires in {state.countDown} seconds</p>)}
+                    {state.showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {state.redirectCountDown} seconds...</p>}
                 </div>
+                {console.log('lobby users:',state.lobbyUsers)}
+                {console.log(availableUsers)}
+                {console.log(availableUsers[0])}
                 {areUsersAvailable ? (
-                    <ul className={hideLobby ? `hide` : ''}>
+                    <ul className={state.hideLobby ? 'hide' : ''}>
                         {availableUsers.map((user) => (
                             <li key={user.id}>
                                 <input
@@ -286,9 +249,9 @@ const Lobby = () => {
                                     id={user.id}
                                     name="userSelection"
                                     value={user.id}
-                                    checked={opponentId === user.id}
+                                    checked={state.opponentId === user.id}
                                     onChange={() => handleUserSelection(user.id)}
-                                    disabled={!!challenger.challengerUserId || !!opponentId}
+                                    disabled={!!state.challenger.challengerUserId || !!state.opponentId}
                                 />
                                 <label htmlFor={user.id}>{user.username}</label>
                             </li>
@@ -297,20 +260,20 @@ const Lobby = () => {
                 ) : (
                     <p>No users available</p>
                 )}
-                {showDisconnectedMessage && (
+                {state.showDisconnectedMessage && (
                     <p>Selected user has been disconnected!</p>
                 )}
-                {challenger && challenger.challengerUserId && (
+                {state.challenger && state.challenger.challengerUserId && (
                     <div className='confirmation'>
-                        <p>{challenger.challengerUsername} has challenged you!</p>
+                        <p>{state.challenger.challengerUsername} has challenged you!</p>
                         <button onClick={handleAcceptChallenge}>Accept</button>
                         <button onClick={handleRejectChallenge}>Reject</button>
                     </div>
                 )}
-                {opponentId && lobbyUsers[opponentId] && (
+                {state.opponentId && state.lobbyUsers[state.opponentId] && (
                     <div className='confirmation'>
-                        <p>Challenge {lobbyUsers[opponentId].username}?</p>
-                        <button className='confirm-button' onClick={handleChallenge} disabled={isConfirmationButtonDisabled}>Confirm</button>
+                        <p>Challenge {state.lobbyUsers[state.opponentId].username}?</p>
+                        <button className='confirm-button' onClick={handleChallenge} disabled={state.isConfirmationButtonDisabled}>Confirm</button>
                         <button onClick={handleCancelChallenge}>Cancel</button>
                     </div>
                 )}
@@ -318,6 +281,7 @@ const Lobby = () => {
             <div className="gutter"></div>
         </div>
     );
+    
 };
 
 export default Lobby;
