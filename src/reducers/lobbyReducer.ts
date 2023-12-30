@@ -59,6 +59,45 @@ export function lobbyReducer(state: ILobbyState, action: LobbyAction): ILobbySta
         case 'SET_LOBBY_USERS':
             return { ...state, lobbyUsers: action.payload };
 
+        case 'SET_OPPONENT_ID':
+            return { ...state, opponentId: action.payload };
+
+        case 'SET_CHALLENGER':
+            return { ...state, challenger: action.payload };
+
+        case 'SET_IS_CHALLENGER':
+            return { ...state, isChallenger: action.payload };
+        
+        case 'SET_MESSAGE':
+            return { ...state, message: action.payload };
+        
+        case 'SET_COUNTDOWN':
+            return { ...state, countDown: action.payload };
+        
+        case 'SET_REDIRECT_COUNTDOWN':
+            return { ...state, redirectCountDown: action.payload };
+        
+        case 'SET_SHOW_COUNTDOWN':
+            return { ...state, showCountdown: action.payload };
+        
+        case 'SET_SHOW_REDIRECT_COUNTDOWN':
+            return { ...state, showRedirectCountdown: action.payload };
+        
+        case 'SET_SHOW_DISCONNECTED_MESSAGE':
+            return { ...state, showDisconnectedMessage: action.payload };
+        
+        case 'SET_USER_RETURNED':
+            return { ...state, userReturned: action.payload };
+        
+        case 'SET_IS_CONFIRMATION_BUTTON_DISABLED':
+            return { ...state, isConfirmationButtonDisabled: action.payload };
+        
+        case 'SET_COUNTDOWN_COMPLETE':
+            return { ...state, countdownComplete: action.payload };
+        
+        case 'SET_HIDE_LOBBY':
+            return { ...state, hideLobby: action.payload };
+
         default:
             return state;
     }
