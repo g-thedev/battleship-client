@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
+import { lobbyReducer, initialState } from '../../reducers/lobbyReducer'
 import './style.css';
 
 
