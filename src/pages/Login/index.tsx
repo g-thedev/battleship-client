@@ -49,7 +49,6 @@ const LoginPage: React.FC = () => {
 
     return (
         <div className='login-form'>
-            <h1>Login</h1>
             { error && <p>{ error }</p> }
             <input
                 type="text"
