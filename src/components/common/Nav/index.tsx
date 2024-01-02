@@ -38,6 +38,8 @@ const NavBar: React.FC = () => {
                 {location.pathname === '/lobby' && <h1>Lobby</h1>}
                 {location.pathname === '/game-setup' && <h1>Place your ships!</h1>}
                 {location.pathname === '/game-room' && <h1>Game Room</h1>}
+                {location.pathname === '/login' && <h1>Login</h1>}
+                {location.pathname === '/register' && <h1>Register</h1>}
             </div>
             <div className="nav">
                 {isAuthenticated ? (

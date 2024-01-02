@@ -55,7 +55,6 @@ const RegisterPage: React.FC = () => {
 
     return (
         <div className='registration-form'>
-            <h1>Register</h1>
             { error && <p>{ error }</p> }
             { success && <p>{ success }</p> }
             <input
