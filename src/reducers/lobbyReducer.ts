@@ -67,7 +67,7 @@ export const initialState: ILobbyState = {
 export function lobbyReducer(state: ILobbyState, action: LobbyAction): ILobbyState {
     switch (action.type) {
         case 'SET_LOBBY_USERS':
-            return { ...state, lobbyUsers: action.payload };
+            return { ...state, lobbyUsers: action.payload.users };
 
         case 'SET_OPPONENT_ID':
             return { ...state, opponentId: action.payload };
@@ -140,7 +140,7 @@ export function lobbyReducer(state: ILobbyState, action: LobbyAction): ILobbySta
                 ...state,
                 roomId: action.payload,
             };
-            
+
         case 'DECREMENT_COUNTDOWN':
             const newCountDown = state.countDown > 0 ? state.countDown - 1 : 0;
             return { ...state, countDown: newCountDown };
