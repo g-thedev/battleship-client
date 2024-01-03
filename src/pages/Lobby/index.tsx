@@ -17,9 +17,15 @@ const Lobby = () => {
     const socketEventHandlers = {
         'update_lobby': (users: Record<string, any>) => dispatch({ type: 'SET_LOBBY_USERS', payload: { users } }),
         'challenge_received': (data: any) => dispatch({ type: 'SET_CHALLENGER', payload: data }),
-        'challenge_accepted': () => dispatch({ type: 'SET_HIDE_LOBBY', payload: true }),
+        'challenge_accepted': () => {
+            dispatch({ type: 'SET_HIDE_LOBBY', payload: true })
+            dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+        },
         'challenge_canceled': (data: any) => dispatch({ type: 'CANCEL_CHALLENGE', payload: data }),
-        'challenge_rejected': (data: any) => dispatch({ type: 'REJECT_CHALLENGE', payload: data }),
+        'challenge_rejected': (data: any) => {
+            dispatch({ type: 'REJECT_CHALLENGE', payload: data })
+            dispatch({ type: 'SET_IS_CONFIRMATION_BUTTON_DISABLED', payload: false });
+        },
         'challenge_unavailable': (data: any) => dispatch({ type: 'REJECT_CHALLENGE', payload: data }),
         'connect_error': (error: any) => console.error('Connection error:', error),
         'room_ready': (data: any) => {
@@ -40,7 +46,7 @@ const Lobby = () => {
                 } else if (state.lastActionType === 'REJECT_CHALLENGE') {
                     dispatch({ type: 'REJECT_CHALLENGE', payload: { message: '' } });
                 }
-            }, 5000);
+            }, 1000);
         }
     
         return () => clearTimeout(messageTimeout);
@@ -112,7 +118,6 @@ const Lobby = () => {
     
         if (state.isChallenger) {
             dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: true });
-            dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
     
             countdownInterval = setInterval(() => {
                 dispatch({ type: 'DECREMENT_COUNTDOWN' });
@@ -138,7 +143,6 @@ const Lobby = () => {
     
         if (state.challenger.challengerUserId && currentUserId !== state.challenger.challengerUserId && !state.isChallenger) {
             dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: true });
-            dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
     
             countdownInterval = setInterval(() => {
                 dispatch({ type: 'DECREMENT_COUNTDOWN' });
@@ -237,9 +241,6 @@ const Lobby = () => {
                     {state.showCountdown && (<p>Challenge expires in {state.countDown} seconds</p>)}
                     {state.showRedirectCountdown && <p>Challenge confirmed! Moving to game setup in {state.redirectCountDown} seconds...</p>}
                 </div>
-                {console.log('lobby users:',state.lobbyUsers)}
-                {console.log(availableUsers)}
-                {console.log(availableUsers[0])}
                 {areUsersAvailable ? (
                     <ul className={state.hideLobby ? 'hide' : ''}>
                         {availableUsers.map((user) => (
