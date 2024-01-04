@@ -20,6 +20,7 @@ const Lobby = () => {
         'challenge_accepted': () => {
             dispatch({ type: 'SET_HIDE_LOBBY', payload: true })
             dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
+            dispatch({ type: 'SET_IS_CHALLENGER', payload: false });
         },
         'challenge_canceled': (data: any) => dispatch({ type: 'CANCEL_CHALLENGE', payload: data }),
         'challenge_rejected': (data: any) => {
@@ -185,6 +186,9 @@ const Lobby = () => {
         if (state.challenger && socket) {
             socket.emit('accept_challenge', { challengerUserId: state.challenger.challengerUserId, challengedUserId: currentUserId });
         }
+
+        dispatch({ type: 'SET_CHALLENGER', payload: { challengerUserId: '', challengerUsername: '' } });
+        dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
     };
     
 
