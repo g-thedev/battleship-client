@@ -46,7 +46,7 @@ const Lobby = () => {
                 } else if (state.lastActionType === 'REJECT_CHALLENGE') {
                     dispatch({ type: 'REJECT_CHALLENGE', payload: { message: '' } });
                 }
-            }, 1000);
+            }, 5000);
         }
     
         return () => clearTimeout(messageTimeout);
@@ -96,22 +96,6 @@ const Lobby = () => {
 
     // Manage navigation outside of the useEffect above to prevent
     // Cannot update a component (`BrowserRouter`) while rendering a different component (`Lobby`).
-
-    const handleAutoRejectChallenge = () => {
-        if (state.challenger && socket) {
-            socket.emit('reject_challenge', { challengerUserId: state.challenger['challengerUserId'], challengedUserId: currentUserId });
-            dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
-            dispatch({ type: 'SET_MESSAGE', payload: 'Challenge auto-rejected due to timeout.' });
-    
-            
-            setTimeout(() => {
-                dispatch({ type: 'SET_MESSAGE', payload: '' }); 
-            }, 5000);
-    
-            dispatch({ type: 'SET_CHALLENGER', payload: { challengerUserId: '', challengerUsername: '' } });
-        }
-    };
-
    
     useEffect(() => {
         let countdownInterval: NodeJS.Timeout;
@@ -150,7 +134,7 @@ const Lobby = () => {
                 if (state.countDown <= 1) {
                     clearInterval(countdownInterval);
                     dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
-                    handleAutoRejectChallenge();
+                    handleRejectChallenge();
                 }
             }, 1000);
         }
@@ -210,6 +194,11 @@ const Lobby = () => {
             socket.emit('reject_challenge', { challengerUserId: state.challenger.challengerUserId, challengedUserId: currentUserId });
             dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
             dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
+            dispatch({ type: 'SET_MESSAGE', payload: 'Challenge auto-rejected due to timeout.' });
+
+            setTimeout(() => {
+                dispatch({ type: 'SET_MESSAGE', payload: '' }); 
+            }, 5000);
         }
     };
     

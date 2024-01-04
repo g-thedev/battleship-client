@@ -108,14 +108,6 @@ export function lobbyReducer(state: ILobbyState, action: LobbyAction): ILobbySta
         case 'SET_HIDE_LOBBY':
             return { ...state, hideLobby: action.payload };
 
-        case 'AUTO_REJECT_CHALLENGE':
-            return {
-                ...state,
-                showCountdown: false,
-                message: 'Challenge auto-rejected due to timeout.',
-                challenger: { challengerUserId: '', challengerUsername: '' },
-            };
-
         case 'CLEAR_MESSAGE':
             return {
                 ...state,
