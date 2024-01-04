@@ -198,7 +198,7 @@ const Lobby = () => {
             socket.emit('reject_challenge', { challengerUserId: state.challenger.challengerUserId, challengedUserId: currentUserId });
             dispatch({ type: 'SET_SHOW_COUNTDOWN', payload: false });
             dispatch({ type: 'SET_COUNTDOWN', payload: 30 });
-            dispatch({ type: 'SET_MESSAGE', payload: 'Challenge auto-rejected due to timeout.' });
+            dispatch({ type: 'SET_MESSAGE', payload: 'Challenge rejected' });
 
             setTimeout(() => {
                 dispatch({ type: 'SET_MESSAGE', payload: '' }); 
