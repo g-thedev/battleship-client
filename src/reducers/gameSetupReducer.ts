@@ -49,6 +49,73 @@ export const initialState: IGameSetupState = {
 
 export const gameSetupReducer = (state: IGameSetupState, action: GameSetupAction) => {
     switch (action.type) {
+        case 'SET_COUNTDOWN': {
+            return {
+                ...state,
+                countDown: action.payload
+            };
+        }
+        case 'SET_REDIRECT_COUNTDOWN': {
+            return {
+                ...state,
+                redirectCountDown: action.payload
+            };
+        }
+        case 'SET_GAME_CANCELLED': {
+            return {
+                ...state,
+                gameCancelled: action.payload
+            };
+        }
+        case 'SET_OPPONENT_READY': {
+            return {
+                ...state,
+                opponentReady: action.payload
+            };
+        }
+        case 'SET_OPPONENT_RESET': {
+            return {
+                ...state,
+                opponenetReset: action.payload
+            };
+        }
+        case 'SET_IS_READY_BUTTON_DISABLED': {
+            return {
+                ...state,
+                isReadyButtonDisabled: action.payload
+            };
+        }
+        case 'SET_SHOW_GAME_START': {
+            return {
+                ...state,
+                showGameStart: action.payload
+            };
+        }
+        case 'SET_FIRST_PLAYER': {
+            return {
+                ...state,
+                firstPlayer: action.payload
+            };
+        }
+        case 'SET_COUNTDOWN_COMPLETE': {
+            return {
+                ...state,
+                countdownComplete: action.payload
+            };
+        }
+        case 'SET_CURRENT_SHIP': {
+            return {
+                ...state,
+                currentShip: action.payload
+            };
+        }
+        case 'UPDATE_ROOM_ID': {
+            return {
+                ...state,
+                roomId: action.payload
+            };
+        }
+        
         
         default: {
             return state;

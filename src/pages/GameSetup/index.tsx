@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSocket as socketContext } from '../../context/SocketContext';
+import { gameSetupReducer, initialState } from '../../reducers/gameSetupReducer';
 import Grid from '../../components/Grid';
 import Button from '../../components/button';
 import './style.css';
@@ -16,6 +18,10 @@ const GameSetup = () => {
     const location = useLocation();
     const intervalIdRef = useRef<number | null>(null);
     const intervalRedirectIdRef = useRef<number | null>(null);
+
+    
+
+
     const [countdown, setCountdown] = useState(5);
     const [redirectCountDown, setRedirectCountDown] = useState(5);
     const currentUserId = localStorage.getItem('user_id');
