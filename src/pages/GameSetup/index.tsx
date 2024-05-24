@@ -149,6 +149,7 @@ const GameSetup = () => {
 
     const handleReady = () => {
         setReadyIsButtonDisabled(true);
+        const roomId = localStorage.getItem('gameRoomId')
         socket?.emit('player_ready', { playerId: currentUserId, roomId, ships });
     }
 
